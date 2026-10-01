@@ -216,15 +216,6 @@ class HangingLLM:
 DEADLINE_S = 1.0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason=(
-        "session 2 taught the deadline (a timeout is an exception you turn into a "
-        "refusal); enforcing YourAgent.timeout_s is the hardening after session 14. "
-        "Then delete this marker."
-    ),
-)
 def test_timeout_on_a_hanging_provider_is_flagged_within_a_second() -> None:
     model = HangingLLM()
     agent = YourAgent(client=model)

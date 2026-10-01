@@ -19,6 +19,7 @@ offline `FakeLLM`. Keys live only in `.env`, which git ignores.
 
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 
 from bootcamp_agent.agent import AgentResult, TraceEvent, _refusal, answer_question
@@ -36,6 +37,29 @@ from safety import contains_instruction_like_text
 #: input: nothing you build writes to it.
 CORPUS_DIR = Path(__file__).resolve().parent / "data" / "corpus"
 
+class TimeoutClient:
+    def __init__(self, client: LLMClient, timeout_s: float) -> None:
+        self.client = client
+        self.timeout_s = timeout_s
+    def complete(self, system: str, user: str) -> str:
+        result: list[str] = []
+        error: list[BaseException] = []
+
+        def call() -> None:
+            try:
+                result.append(self.client.complete(system=system, user=user))
+            except BaseException as exc:
+                error.append(exc)
+
+        worker = threading.Thread(target=call, daemon=True)
+        worker.start()
+        worker.join(timeout=self.timeout_s)
+
+        if worker.is_alive():
+            raise TimeoutError(f"LLM call timed out after {self.timeout_s} seconds")
+        if error:
+            raise error[0]
+        return result[0]
 
 class YourAgent:
     """The agent the tests and the grader run. Make it yours."""
@@ -78,14 +102,15 @@ class YourAgent:
         )
 
         try:
+            timeout_client = TimeoutClient(self.client, self.timeout_s)
             result = answer_question(
                 question,
                 self.documents,
-                self.client,
+                timeout_client,
                 max_tool_calls=3,
                 top_k=3,
         )
-        except (ConnectionError, OllamaError):
+        except (ConnectionError, OllamaError, TimeoutError):
             return AgentResult(
                 answer=_refusal(),
                 trace=(
