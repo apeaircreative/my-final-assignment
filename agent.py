@@ -28,6 +28,7 @@ from bootcamp_agent.documents import Document, load_corpus
 from bootcamp_agent.llm import LLMClient, get_client
 from bootcamp_agent.schema import ResearchAnswer
 from bootcamp_agent.tools import Tool, build_tools
+from bootcamp_agent.ollama import OllamaError
 
 from safety import contains_instruction_like_text
 
@@ -76,13 +77,24 @@ class YourAgent:
             top_k=3,
         )
 
-        result = answer_question(
-            question,
-            self.documents,
-            self.client,
-            max_tool_calls=3,
-            top_k=3,
+        try:
+            result = answer_question(
+                question,
+                self.documents,
+                self.client,
+                max_tool_calls=3,
+                top_k=3,
         )
+        except (ConnectionError, OllamaError):
+            return AgentResult(
+                answer=_refusal(),
+                trace=(
+                    TraceEvent(
+                        "decision",
+                        "provider connection error; flagged refusal",
+                    ),
+                ),
+            )
 
         if contains_instruction_like_text(retrieved):
             return AgentResult(

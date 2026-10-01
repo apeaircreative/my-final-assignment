@@ -187,16 +187,6 @@ class BrokenLLM:
         self.calls += 1
         raise ConnectionError("provider unreachable")
 
-
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason=(
-        "session 2 taught the refusal as a value (ch02-e4); wiring it into YourAgent "
-        "is the hardening after session 14. Catch the provider's error, return a "
-        "flagged refusal, then delete this marker."
-    ),
-)
 def test_provider_error_is_flagged_not_raised() -> None:
     model = BrokenLLM()
     try:
