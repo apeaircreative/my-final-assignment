@@ -21,12 +21,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from bootcamp_agent.agent import AgentResult, answer_question
+from bootcamp_agent.agent import AgentResult, TraceEvent, _refusal, answer_question
+from bootcamp_agent.retrieval import retrieve
 from bootcamp_agent.config import load_settings
 from bootcamp_agent.documents import Document, load_corpus
 from bootcamp_agent.llm import LLMClient, get_client
 from bootcamp_agent.schema import ResearchAnswer
 from bootcamp_agent.tools import Tool, build_tools
+
+from safety import contains_instruction_like_text
 
 #: The six course documents, copied in by `bootcamp capstone new`. Versioned
 #: input: nothing you build writes to it.
@@ -51,14 +54,49 @@ class YourAgent:
         self.tools: dict[str, Tool] = build_tools(self.documents, self.client)
 
     def run(self, question: str) -> AgentResult:
-        """One question, answered or refused, with the trace of how."""
-        return answer_question(
+        """One question, answered or refused, with the trace of how.
+
+        USER QUESTION
+            ↓
+        RETRIEVE TOP 3 CHUNKS
+            ↓
+        COURSE PIPELINE
+             ↓
+        RETRIEVE → BUILD CONTEXT → LLM → PARSE → VERIFY CITATIONS
+             ↓
+         APPLICATION SAFETY CHECK
+             ↓
+         instruction-like retrieved content?
+             ├── YES → flagged refusal
+             └── NO  → return course result
+        """
+        retrieved = retrieve(
+            question,
+            self.documents,
+            top_k=3,
+        )
+
+        result = answer_question(
             question,
             self.documents,
             self.client,
             max_tool_calls=3,
             top_k=3,
         )
+
+        if contains_instruction_like_text(retrieved):
+            return AgentResult(
+                answer=_refusal(),
+                trace=result.trace
+                + (
+                    TraceEvent(
+                        "decision",
+                        "retrieved content contained instruction-like text; flagged refusal",
+                    ),
+                ),
+            )
+
+        return result
 
     def __call__(self, question: str) -> ResearchAnswer:
         return self.run(question).answer
