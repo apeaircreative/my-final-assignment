@@ -20,7 +20,9 @@ offline `FakeLLM`. Keys live only in `.env`, which git ignores.
 from __future__ import annotations
 
 import threading
+from copy import deepcopy
 from pathlib import Path
+from dataclasses import dataclass, field
 
 from bootcamp_agent.agent import AgentResult, TraceEvent, _refusal, answer_question
 from bootcamp_agent.retrieval import retrieve
@@ -31,11 +33,65 @@ from bootcamp_agent.schema import ResearchAnswer
 from bootcamp_agent.tools import Tool, build_tools
 from bootcamp_agent.ollama import OllamaError
 
+
 from safety import contains_instruction_like_text
 
 #: The six course documents, copied in by `bootcamp capstone new`. Versioned
 #: input: nothing you build writes to it.
 CORPUS_DIR = Path(__file__).resolve().parent / "data" / "corpus"
+
+@dataclass
+class SessionState:
+    preferences: dict = field(default_factory=dict)
+    episodes: list[str] = field(default_factory=list)
+
+    def reset(self) -> None:
+        self.preferences.clear()
+        self.episodes.clear()
+
+class MemoryStore:
+    """
+    caller → remember() → copy → store → copy → caller
+
+    Prevents caller mutations from changing stored memory.
+    """
+
+    def __init__(self) -> None:
+        self._data: dict[tuple[str, str], object] = {}
+
+    def remember(self, user_id: str, key: str, value: object) -> None:
+        if not user_id:
+            raise ValueError("user_id must not be empty")
+
+        self._data[(user_id, key)] = deepcopy(value)
+
+    def recall(self, user_id: str, key: str) -> object | None:
+        if not user_id:
+            raise ValueError("user_id must not be empty")
+
+        value = self._data.get((user_id, key))
+        return deepcopy(value)
+
+def answer_with_state(
+    question: str,
+    state: SessionState,
+    client: LLMClient,
+):
+    prompt = question
+    if state.preferences.get("answer_style") == "short":
+        prompt += " (answer briefly)"
+
+    documents = load_corpus(CORPUS_DIR)
+    result = answer_question(
+        prompt,
+        documents,
+        client,
+    )
+
+    state.episodes.append(f"Q: {question[:60]}")
+    state.episodes = state.episodes[-5:]
+
+    return result
 
 class TimeoutClient:
     def __init__(self, client: LLMClient, timeout_s: float) -> None:

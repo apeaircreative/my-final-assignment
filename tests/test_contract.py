@@ -20,7 +20,7 @@ into a failure that says "XPASS". That is your cue: delete the marker, and the
 test becomes a pass you earned. `raises=AssertionError` means the xfail only
 counts when the CONTRACT fails, never a typo or a crash in the test itself.
 
-Two more are `skip` placeholders, for work that does not exist until a later
+One more is a `skip` placeholder, for work that does not exist until a later
 session: replace the body with the real test when you get there.
 """
 
@@ -34,7 +34,7 @@ from bootcamp_agent.documents import Document
 from bootcamp_agent.llm import FakeLLM
 from bootcamp_agent.tools import Tool
 
-from agent import YourAgent
+from agent import MemoryStore, SessionState, YourAgent, answer_with_state
 
 SUPPORTED = "How does chunking work in RAG?"
 UNSUPPORTED = "What is the capital city of Mongolia?"
@@ -187,6 +187,7 @@ class BrokenLLM:
         self.calls += 1
         raise ConnectionError("provider unreachable")
 
+
 def test_provider_error_is_flagged_not_raised() -> None:
     model = BrokenLLM()
     try:
@@ -261,15 +262,100 @@ def test_tools_no_writing_tool_is_wired() -> None:
     assert all(isinstance(tool, Tool) for tool in tools.values())
 
 
-# ------------------------------------------------ later sessions: placeholders
+# ------------------------------------------------ session 11: state and memory
 
 
-@pytest.mark.skip(
-    reason="session 11: write this when your agent remembers. Prove the cap, the reset, "
-    "and that one user's memory never answers another's."
-)
-def test_memory_is_capped_reset_and_kept_per_user() -> None:
-    raise NotImplementedError
+def test_answer_with_state_applies_preference_and_caps_episodes() -> None:
+    state = SessionState()
+    state.preferences["answer_style"] = "short"
+    model = FakeLLM(
+        default=_reply(
+            "Chunking breaks documents into smaller passages.",
+            ["rag-basics"],
+        )
+    )
+
+    questions = (
+        "Question one",
+        "Question two",
+        "Question three",
+        "Question four",
+        "Question five",
+        "Question six",
+    )
+    for question in questions:
+        answer_with_state(question, state, model)
+
+    assert len(model.calls) == 6
+    assert all(" (answer briefly)" in user for _, user in model.calls)
+
+    assert state.episodes == [
+        "Q: Question two",
+        "Q: Question three",
+        "Q: Question four",
+        "Q: Question five",
+        "Q: Question six",
+    ]
+
+def test_answer_with_state_truncates_long_episode_questions() -> None:
+    state = SessionState()
+    model = FakeLLM(
+        default=_reply(
+            "Chunking breaks documents into smaller passages.",
+            ["rag-basics"],
+        )
+    )
+    long_question = "A" * 80
+
+    answer_with_state(long_question, state, model)
+
+    assert state.episodes[-1] == f"Q: {long_question[:60]}"
+
+def test_session_state_reset_clears_preferences_and_episodes() -> None:
+    state = SessionState(
+        preferences={"answer_style": "short"},
+        episodes=["Q: one", "Q: two"],
+    )
+
+    state.reset()
+
+    assert state.preferences == {}
+    assert state.episodes == []
+
+
+def test_memory_store_is_isolated_and_returns_none_when_missing() -> None:
+    memory = MemoryStore()
+
+    memory.remember("alice", "color", "blue")
+    memory.remember("bob", "color", "green")
+
+    assert memory.recall("alice", "color") == "blue"
+    assert memory.recall("bob", "color") == "green"
+    assert memory.recall("charlie", "color") is None
+
+
+def test_memory_store_defensively_copies_values() -> None:
+    memory = MemoryStore()
+    original = {"items": ["a"]}
+
+    memory.remember("alice", "profile", original)
+
+    original["items"].append("outside")
+    recalled = memory.recall("alice", "profile")
+    recalled["items"].append("returned")
+
+    assert memory.recall("alice", "profile") == {"items": ["a"]}
+
+
+@pytest.mark.parametrize("user_id", ["", None])
+def test_memory_store_rejects_empty_user_ids(user_id) -> None:
+    memory = MemoryStore()
+
+    with pytest.raises(ValueError):
+        memory.remember(user_id, "key", "value")
+
+    with pytest.raises(ValueError):
+        memory.recall(user_id, "key")
 
 
 @pytest.mark.skip(
