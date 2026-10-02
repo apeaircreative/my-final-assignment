@@ -68,7 +68,7 @@ class YourAgent:
     #: flagged refusal. NOT ENFORCED YET: the starter waits for ever, which is
     #: why the `timeout` contract test is marked xfail. The test sets this low
     #: and expects an answer inside a second.
-    timeout_s: float = 30.0
+    timeout_s: float = 120.0
 
     def __init__(self, client: LLMClient | None = None) -> None:
         self.documents: list[Document] = load_corpus(CORPUS_DIR)
