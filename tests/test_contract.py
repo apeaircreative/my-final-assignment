@@ -357,10 +357,17 @@ def test_memory_store_rejects_empty_user_ids(user_id) -> None:
     with pytest.raises(ValueError):
         memory.recall(user_id, "key")
 
-
-@pytest.mark.skip(
-    reason="session 14: the regression test for rank 1 of docs/ISSUES.md. Write it red "
-    "against the bug, fix the bug, watch it go green."
-)
 def test_regression_rank_1_of_the_issue_list() -> None:
-    raise NotImplementedError
+    model = BrokenLLM()
+    agent = YourAgent(client=model)
+
+    result = agent.run(SUPPORTED)
+
+    assert _is_flagged_refusal(result.answer), result.answer
+
+    kinds = [event.kind for event in result.trace]
+    assert kinds == ["retrieve", "llm_call", "decision"], result.trace
+
+    llm_event = result.trace[1]
+    assert "provider" in llm_event.detail.lower()
+    assert "error" in llm_event.detail.lower()

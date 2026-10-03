@@ -166,13 +166,21 @@ class YourAgent:
                 max_tool_calls=3,
                 top_k=3,
         )
-        except (ConnectionError, OllamaError, TimeoutError):
+        except (ConnectionError, OllamaError, TimeoutError) as error:
             return AgentResult(
                 answer=_refusal(),
                 trace=(
                     TraceEvent(
+                        "retrieve",
+                        f"top_k=3 -> {[(s.chunk.doc_id, s.chunk.position) for s in retrieved]}",
+                    ),
+                    TraceEvent(
+                        "llm_call",
+                        f"provider call failed: {type(error).__name__}",
+                    ),
+                    TraceEvent(
                         "decision",
-                        "provider connection error; flagged refusal",
+                        "provider call failed; flagged refusal",
                     ),
                 ),
             )
