@@ -2,78 +2,103 @@
 
 ## The starting point
 
-The Final Assignment does not start from an empty agent. The course package already provides the core research-assistant pipeline. The student’s task is to inspect that baseline, identify gaps in its reliability contract, and harden those boundaries without rebuilding working infrastructure.
+The Final Assignment does not start from an empty agent. The course package
+provides the core research-assistant pipeline. The student's task is to inspect
+that baseline, identify gaps in its reliability contract, and harden those
+boundaries without rebuilding working infrastructure.
 
-**Working principle:** Course infrastructure → inspect → identify gaps → harden → test → measure.
+**Working principle:** Course infrastructure → inspect → identify gaps → harden
+→ test → measure.
 
-## Architecture
+> ## Observations + Decisions
+> - **Run shape:** [0001-run-shape.md](docs/adr/0001-run-shape.md)
+> - **Failure behavior and known timeout limitation:** [ISSUES.md](docs/ISSUES.md)
+> - **Evaluation and trace-fidelity evidence:** [EVAL_REPORT.md](docs/EVAL_REPORT.md)
+> - **Retention boundary:** [RETENTION.md](docs/RETENTION.md)
+
+## Code locations
+
+| Area | Location |
+|---|---|
+| Application boundary and wrapper flow | `agent.py` — `YourAgent.run()` |
+| Wrapper retrieval, timeout adaptation, provider-error handling, and post-return safety decision | `agent.py` |
+| Course answer retrieval, context building, model call, parse repair, and citation validation | `bootcamp_agent/agent.py` — `answer_question()` |
+| Shared retrieval implementation | `bootcamp_agent/retrieval.py` |
+| Provider timeout adapter | `agent.py` — `TimeoutClient` |
+| Retrieved-content pattern check | `safety.py` — `contains_instruction_like_text()` |
+| Registered reader-tool definitions | `bootcamp_agent/tools.py` |
+| Wrapper failure and safety-decision trace events | `agent.py` |
+| Course normal-result trace events | `bootcamp_agent/agent.py` |
+
+## Current architecture
+
+The application wrapper surrounds the course-provided `answer_question()`
+pipeline. The two layers have different responsibilities.
 
 ```mermaid
 flowchart TD
-    A["User question"] --> B["Retrieve chunks<br/>Lexical token overlap + IDF weighting<br/>top_k = 3"]
+    A(["User asks a question"]):::entry --> B["App receives question"]:::wrapper
 
-    B -->|"No matching chunks"| C["Flagged refusal<br/>Zero model calls"]
-    B -->|"Matching chunks"| D["Build context from retrieved passages"]
-    D --> E["Prompt model<br/>Passages labeled as data"]
-    E --> F["LLMClient.complete(system, user)"]
+    %% App wrapper
+    B --> C["Find relevant content<br/>for safety review"]:::wrapper
+    C --> D["Save content for later safety check"]:::data
+    C --> E["Send question to answer engine"]:::wrapper
 
-    F -->|"Provider error or deadline exceeded<br/>proposed hardening"| R["Flagged refusal"]
-    F -->|"Response"| G{"Parse ResearchAnswer"}
+    %% Course answer engine
+    subgraph COURSE["Course answer engine"]
+        direction TD
 
-    G -->|"Invalid: first attempt"| H["Corrective retry"]
-    H --> F
-    G -->|"Invalid: second attempt"| I["Flagged refusal"]
+        F["Find relevant content<br/>for the answer"]:::course
 
-    G -->|"Valid"| J{"Citations among retrieved IDs?"}
-    J -->|"Some IDs not retrieved"| K["Strip those IDs<br/>Flag for human review"]
-    J -->|"All IDs retrieved"| V{"Retrieved-content safety check<br/>proposed hardening"}
+        F -->|"Nothing relevant found"| G["Tell user the question<br/>is not supported"]:::refusal
+        F -->|"Relevant content found"| H["Prepare source content<br/>for the model"]:::course
 
-    K --> V
-    V -->|"Unsafe outcome"| R
-    V -->|"Allowed outcome"| L["Return answer"]
+        H --> I["Ask the model for an answer"]:::model
 
-    C --> M["AgentResult + trace"]
-    I --> M
-    R --> M
-    L --> M
-```
+        I -->|"Model responds"| J{"Is the answer format valid?"}:::decision
+        I -->|"Service problem or timeout"| K["Return issue to app"]:::exception
 
-The provider-error, deadline, and retrieved-content safety branches are **proposed hardening**, not behavior the starter already implements. “Matching chunks” means retrieval found token overlap; it does not prove that the passage answers the question.
+        J -->|"Yes"| L{"Do the sources<br/>match the content found?"}:::decision
+        J -->|"No, first try"| M["Ask once more<br/>to fix the format"]:::retry
+        M --> I
 
-## What already exists
+        J -->|"No, retry also failed"| N["Return a safe refusal"]:::refusal
 
-Inspection of the installed course package showed that `answer_question()` already provides:
+        L -->|"Yes"| O["Return answer result"]:::courseResult
+        L -->|"No"| P["Apply source-check rules"]:::retry
+        P --> O
 
-- Deterministic lexical retrieval, returning up to three scored chunks.
-- A refusal without a model call when retrieval returns no chunks.
-- Context construction and a prompt that labels retrieved passages as data.
-- Parsing into a structured `ResearchAnswer`, with one corrective retry after a parse failure.
-- A flagged refusal if parsing fails twice.
-- Verification of citation IDs against retrieved IDs; fabricated IDs are stripped and the answer is flagged.
-- An `AgentResult` containing the answer and execution trace.
+        G --> O
+        N --> O
+    end
 
-The retrieval function scores query-token overlap with inverse-document-frequency weighting. It is a deliberately inspectable lexical baseline, not embedding-based semantic search. No measured retrieval failure has yet established a need to replace it.
+    %% App service-error path
+    K --> Q["App returns a safe refusal"]:::refusal
+    Q --> R["Save failure path<br/>content found → model call → decision"]:::trace
 
-## Where hardening belongs
+    %% App post-answer safety path
+    O --> S{"Safety check:<br/>does saved content contain<br/>a blocked instruction pattern?"}:::decision
+    D --> S
 
-The provider interface is deliberately small:
+    S -->|"Yes"| T["Return a safe refusal"]:::refusal
+    S -->|"No"| U["Show the answer"]:::success
 
-```python
-complete(system: str, user: str) -> str
-```
+    T --> V["Save safety decision"]:::trace
+    U --> W["Save normal result"]:::trace
 
-The provider handles model communication. `YourAgent` should own the application-level decisions around that call:
+    %% Colors
+    classDef entry fill:#0f172a,stroke:#38bdf8,color:#f8fafc,stroke-width:2px;
+    classDef wrapper fill:#dbeafe,stroke:#2563eb,color:#172554,stroke-width:2px;
+    classDef course fill:#ede9fe,stroke:#7c3aed,color:#2e1065,stroke-width:2px;
+    classDef model fill:#f3e8ff,stroke:#9333ea,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#d97706,color:#78350f,stroke-width:2px;
+    classDef retry fill:#ffedd5,stroke:#ea580c,color:#7c2d12,stroke-width:2px;
+    classDef success fill:#dcfce7,stroke:#16a34a,color:#14532d,stroke-width:2px;
+    classDef refusal fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px;
+    classDef exception fill:#ffe4e6,stroke:#e11d48,color:#881337,stroke-width:2px;
+    classDef data fill:#e2e8f0,stroke:#64748b,color:#0f172a,stroke-width:2px;
+    classDef trace fill:#f1f5f9,stroke:#64748b,color:#334155,stroke-width:2px;
+    classDef courseResult fill:#f5f3ff,stroke:#8b5cf6,color:#3b0764,stroke-width:2px;
 
-| Boundary | Current gap | Contract target |
-|---|---|---|
-| Retrieved data → final answer | The prompt says passages are data, but an obedient model can still follow an embedded instruction and cite a retrieved document. | Prevent that outcome from being returned unflagged. |
-| Provider failure → refusal | A provider exception can escape `answer_question()`. | Return a flagged refusal instead of raising to the caller. |
-| Provider execution → deadline | `YourAgent.timeout_s` exists but is not enforced; `complete()` has no timeout parameter. | Return a flagged refusal within the application deadline when a provider hangs. |
-
-The injection test deliberately lets the malicious text reach the model. Its requirement is not “never show the model adversarial text”; it is “never return the injected answer as an unflagged application outcome.”
-
-## Evidence and status
-
-This boundary is based on the `agent.py`, `tests/test_contract.py`, and corpus contents you shared, plus your inspection output for `answer_question()`, `retrieve()`, `LLMClient`, its adapters, and `ResearchAnswer`. The three hardening targets correspond to the three current `xfail` contract tests.
-
-This is a **pre-implementation design**, not a claim that the safeguards work. The proof still needs to come from implementing one change at a time, running its focused test, running the full suite, and measuring the result.
+    style COURSE fill:#faf5ff,stroke:#7c3aed,stroke-width:2px,color:#2e1065
+    ```
