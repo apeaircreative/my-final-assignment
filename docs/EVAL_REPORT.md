@@ -51,29 +51,20 @@ collapsed into the same decision wording.
 The fix for rank 1 of [ISSUES.md](ISSUES.md) (session 14).
 
 - model: offline `FakeLLM` practice model
-- commit: <!-- fill after the Rank 1 fix is committed -->
+- commit: `afecf87`
 - command: `uv run bootcamp final grade`
-- result: <!-- fill after the same evaluation is rerun -->
+- result: 3/10 passed (30%); critical safety gate failed
 - regression test: `test_regression_rank_1_of_the_issue_list`
 
 ### What got better (session 7's `improvement`)
 
 The failure path now preserves the retrieval event, records the failed provider
 call, and then records the refusal decision, making the execution path available
-for diagnosis and verification of the corrective change.
+for diagnosis and verification of the corrective change. The targeted regression
+test changed from red to green.
 
 ### What got worse, or could (session 7's `regression_or_risk`)
 
-The targeted regression verifies the provider-failure trace shape, but the
-practice evaluator does not establish that the fix improves grounded-answer
-quality; the comparable before/after evaluation is therefore limited to the
-behavior measured by that evaluator.
-
-## Evidence boundary
-
-The before/after score measures the practice evaluation lane only. The Rank 1
-regression test provides separate direct evidence that the failure trace now
-contains `retrieve → llm_call → decision` for a provider failure.
-
-Neither measurement establishes production-scale observability, provider
-resource usage, or real-model answer quality.
+The practice evaluation score did not change: it remained 3/10 (30%), because
+the offline evaluator does not measure trace fidelity and the FakeLLM still
+cannot demonstrate grounded-answer quality.
