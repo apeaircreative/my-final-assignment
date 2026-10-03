@@ -11,4 +11,7 @@ grade.txt
 .venv/
 __pycache__/
 .pytest_cache/
-.ruff_cache/
+.ruff_cache/# Personal final-assignment notes/artifacts
+docs/FINAL_ASSIGNMENT-CC.md
+docs/FINAL_ASSIGNMENT-TODO.md
+score_report_after_rank1.json
