@@ -69,13 +69,3 @@ The tests in `tests/test_contract.py` establish:
 These tests do not establish sensitive-content filtering, confidentiality,
 process-restart behavior, or a general deletion guarantee.
 
-## Course references
-
-- **Session 11 — State and Memory:** `units/en/unit3/session-11-state-and-memory/`
-  defines the state and memory exercises and the five-line retention-policy
-  deliverable. `concepts-2.mdx`, “What a memory must refuse to remember,” gives
-  an example refusal list; `ch11-e2` checks that the policy fields are filled,
-  not that code enforces their contents.
-- **Final Assignment capstone guide:** Session 11 calls for `docs/RETENTION.md`
-  and a test for the memory cap. The Session 11 store exercise is distinct from
-  the agent's `YourAgent.run(question)` interface.
