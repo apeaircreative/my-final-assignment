@@ -10,26 +10,6 @@ boundaries without rebuilding working infrastructure.
 **Working principle:** Course infrastructure → inspect → identify gaps → harden
 → test → measure.
 
-> ## Observations + Decisions
-> - **Run shape:** [0001-run-shape.md](docs/adr/0001-run-shape.md)
-> - **Failure behavior and known timeout limitation:** [ISSUES.md](docs/ISSUES.md)
-> - **Evaluation and trace-fidelity evidence:** [EVAL_REPORT.md](docs/EVAL_REPORT.md)
-> - **Retention boundary:** [RETENTION.md](docs/RETENTION.md)
-
-## Code locations
-
-| Area | Location |
-|---|---|
-| Application boundary and wrapper flow | `agent.py` — `YourAgent.run()` |
-| Wrapper retrieval, timeout adaptation, provider-error handling, and post-return safety decision | `agent.py` |
-| Course answer retrieval, context building, model call, parse repair, and citation validation | `bootcamp_agent/agent.py` — `answer_question()` |
-| Shared retrieval implementation | `bootcamp_agent/retrieval.py` |
-| Provider timeout adapter | `agent.py` — `TimeoutClient` |
-| Retrieved-content pattern check | `safety.py` — `contains_instruction_like_text()` |
-| Registered reader-tool definitions | `bootcamp_agent/tools.py` |
-| Wrapper failure and safety-decision trace events | `agent.py` |
-| Course normal-result trace events | `bootcamp_agent/agent.py` |
-
 ## Current architecture
 
 The application wrapper surrounds the course-provided `answer_question()`
