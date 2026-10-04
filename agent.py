@@ -174,7 +174,7 @@ class YourAgent:
         retrieved = retrieve(
             question,
             self.documents,
-            top_k=3,
+            top_k=4,
         )
 
         try:
@@ -184,7 +184,7 @@ class YourAgent:
                 self.documents,
                 timeout_client,
                 max_tool_calls=3,
-                top_k=3,
+                top_k=4,
         )
         except (ConnectionError, OllamaError, TimeoutError) as error:
             return AgentResult(
@@ -192,7 +192,7 @@ class YourAgent:
                 trace=(
                     TraceEvent(
                         "retrieve",
-                        f"top_k=3 -> {[(s.chunk.doc_id, s.chunk.position) for s in retrieved]}",
+                        f"top_k=4 -> {[(s.chunk.doc_id, s.chunk.position) for s in retrieved]}",
                     ),
                     TraceEvent(
                         "llm_call",
