@@ -1,116 +1,104 @@
 # my-final-assignment
 
-<!-- write this: one sentence. What it answers, from what, and what it does when
-the sources say nothing. -->
-
-<!-- add the CI badge once the repository exists:
-![check](https://github.com/<your-github-username>/my-final-assignment/actions/workflows/check.yml/badge.svg) -->
+A source-grounded research assistant that answers developer questions from six versioned documents and refuses unsupported questions.
 
 ## The problem
 
-<!-- write this: who has the problem, and what goes wrong for them today. Two to
-four sentences: minute 1 of your demo, in writing. -->
+Developers need answers that can be checked against a small, trusted document set rather than plausible-sounding guesses. This assistant retrieves passages from its corpus, asks the model to answer from that context, and checks cited document IDs. When retrieval cannot support an answer, it refuses and requests human review.
 
 ## Demo
 
-Two runs, pasted exactly as the commands printed them. Never an edited one.
-`trace` prints every step the agent took, then the answer.
+Captured on 2026-10-04 at commit `7bc03d4` with Ollama `qwen2.5:7b-instruct`. These are the command outputs as printed.
 
 ### One supported answer
 
 ```bash
-uv run bootcamp capstone trace "How does chunking work in RAG?"
+BOOTCAMP_PROVIDER=ollama BOOTCAMP_MODEL=qwen2.5:7b-instruct OLLAMA_BASE_URL=http://127.0.0.1:11434/v1 uv run bootcamp final trace "How does chunking work in RAG?"
 ```
 
 ```text
-<!-- paste this: the output. The citation must be a document retrieval
-returned for this question, and the trace shows it did. -->
+[retrieve] top_k=4 -> [('rag-basics', 1), ('rag-basics', 2), ('evaluation-basics', 0), ('prompt-injection', 2)]
+[llm_call] attempt 1: 260 chars
+[decision] answered with citations ['rag-basics']
+
+answer: Chunking splits documents into passages small enough to be individually relevant — respecting paragraph boundaries beats cutting at a fixed character count mid-sentence.
+citations: ['rag-basics']
+confidence: 1.0
+needs_human_review: False
 ```
 
 ### One refusal
 
 ```bash
-uv run bootcamp capstone trace "What is the capital city of Mongolia?"
+BOOTCAMP_PROVIDER=ollama BOOTCAMP_MODEL=qwen2.5:7b-instruct OLLAMA_BASE_URL=http://127.0.0.1:11434/v1 uv run bootcamp final trace "What is the capital city of Mongolia?"
 ```
 
 ```text
-<!-- paste this: the output. A refusal is flagged for review, cites nothing,
-says so in words, and the trace shows no model call was spent. -->
+[retrieve] top_k=4 -> []
+[decision] no relevant chunks; refusing without an LLM call
+
+answer: I don't know based on the provided corpus.
+citations: []
+confidence: 0.0
+needs_human_review: True
 ```
 
 ## Architecture
 
-<!-- write this: the shape of one run (chain, loop or graph), from question to
-answer: retrieval, the model call, citation verification, the refusal paths.
-Name the model calls one question costs. The decision, and the measurement that
-would reverse it, are in docs/adr/0001-run-shape.md. -->
+`YourAgent.run()` retrieves up to four chunks for the application safety check, then calls the course `answer_question()` pipeline, which independently retrieves context for the model. Empty retrieval refuses without a model call. Otherwise the model returns strict JSON; one corrective retry is allowed if parsing fails. Citations are normalized and checked against retrieved document IDs. Unreturned citations are stripped, confidence is capped at `0.2`, and human review is required. The application then checks retrieved text for its configured instruction-like literal. Provider errors and timeouts return a flagged refusal.
 
-See [docs/adr/0001-run-shape.md](docs/adr/0001-run-shape.md).
+Model-call cost is zero for empty retrieval, normally one call for a supported question, and at most two if the first response needs a format-repair retry.
+
+See [docs/adr/0001-run-shape.md](docs/adr/0001-run-shape.md) for the measured run-shape decision and reversal condition.
 
 ## Measured results
 
-Every number here comes from a command in this table, run on this commit. Say
-which model produced it: CI has no keys, so a CI number is always the offline
-fake model's.
+The current-candidate run and the historical before/after evaluation use different lanes; they are not interchangeable measures of grounded-answer quality.
 
 | What | Command | Model | Result |
 |---|---|---|---|
-| Contract tests | `uv run pytest` | fake | <!-- paste this: the summary line --> |
-| Practice grader | `uv run bootcamp capstone grade` | <!-- write this --> | <!-- paste this: the `score:` line --> |
-| Evaluation, before and after | see [docs/EVAL_REPORT.md](docs/EVAL_REPORT.md) | <!-- write this --> | <!-- paste this: the two pass rates --> |
+| Contract tests | `uv run pytest` | FakeLLM | Previously passed per the project record; not rerun on current HEAD `7bc03d4` |
+| Current public practice grader | `BOOTCAMP_PROVIDER=ollama BOOTCAMP_MODEL=qwen2.5:7b-instruct OLLAMA_BASE_URL=http://127.0.0.1:11434/v1 uv run bootcamp final grade --report /tmp/final-practice-run-current-head-2026-10-04.json` | `ollama:qwen2.5:7b-instruct` | 6/10 (60%); critical safety gate failed. Failed: `fa-01`, `fa-02`, `fa-03`, `fa-05`. Run on `7bc03d4`; report is local under `/tmp`. |
+| Rank 1 before/after | See [docs/EVAL_REPORT.md](docs/EVAL_REPORT.md) | FakeLLM | 3/10 before (`5219834`) → 3/10 after (`afecf87`); the targeted trace regression improved, while the score did not measure that behavior. |
+
+The practice grader is a local diagnostic, not certificate evidence. The FakeLLM does not generate grounded answers from retrieved context, so the historical 3/10 does not mean grounded-answer quality was 30%. The Ollama result is provider-backed, but still does not represent the private final set.
 
 ## The honest limitation
 
-<!-- write this: rank 1 of docs/ISSUES.md in one sentence, and the next step
-you would take. Naming it first is the difference between a limitation and a
-hole somebody found. -->
-
-The full ranked list is in [docs/ISSUES.md](docs/ISSUES.md).
+The top-ranked issue was failure-trace fidelity; the fix and regression test preserve retrieval, provider-call, and decision events. The current practice run still fails critical case `fa-05` on citation recall, citation precision, and claim support. The application injection detector is a narrow literal check, and the existing tests do not establish comprehensive prompt-injection coverage. See the ranked limitations in [docs/ISSUES.md](docs/ISSUES.md).
 
 ## How to run it
 
 ```bash
-git clone https://github.com/<your-github-username>/my-final-assignment && cd my-final-assignment && uv sync && uv run pytest
+git clone https://github.com/apeaircreative/my-final-assignment.git
+cd my-final-assignment
+uv sync
+uv run pytest
 ```
 
-No key needed: without a `.env` it runs on the offline fake model. For a real
-model, copy `.env.example` to `.env`, fill in your provider, and
-`uv sync --extra anthropic` (or `--extra openai`).
-
-To hand in the final assignment, commit and push, then run
-`uv run bootcamp capstone submit --github <you>`. It runs the practice set
-first, then answers the final questions and opens the pull request.
-`--dry-run` shows the bundle without handing anything in.
+Without provider settings the project uses its offline FakeLLM. For Ollama, start the local server and pull the model, then run commands with `BOOTCAMP_PROVIDER=ollama` and `BOOTCAMP_MODEL=qwen2.5:7b-instruct`. For final submission, commit and push first, then use `uv run bootcamp final submit --github <you>`; `--dry-run` does not open a pull request.
 
 ## Sources
 
-<!-- optional. write this: anything you used beyond the six documents in
-data/corpus/, and where it came from (session 13). Delete the section if none. -->
+The agent answers from the six versioned documents under `data/corpus/`; it does not browse the web for answers.
+
+## Further experiments
+
+The [retrieval architecture investigation](docs/extra.md) records a separate 12-query coverage study and the decision to retain lexical retrieval; it is historical evidence, not the current practice score. Supporting diagnostics: [fa-01](scripts/diagnose_fa01.py), [fa-05](scripts/diagnose_fa05.py), [top-k](scripts/diagnose_fa05_topk.py), and [quote handling](scripts/test_quote.py).
 
 ## Credits
 
-<!-- optional. write this: every repository you learned from or borrowed code
-from, with a link and one line on what you took. Capstone repositories are
-public so people can learn from each other; naming the source keeps your
-showcase honest about which parts are yours. Delete the section if none. -->
-
-## Rollback
-
-<!-- optional. write this: how to undo a bad change, with a number and a unit
-(session 14's rollback sentence). Delete the section if you have none yet. -->
+The repository is based on the Dev3Pack final-assignment template and course package from [Gecko Academy's cohort repository](https://github.com/Gecko-Academy/dev3pack-cohort-2026-09), pinned in `pyproject.toml` and `uv.lock`.
 
 ---
 
 | Path | What it is |
 |---|---|
-| `agent.py` | The agent: `YourAgent`, the class the tests, `trace` and the grader run |
-| `tests/test_contract.py` | The capstone contract, as tests (`uv run pytest -k refusal`, `-k injection`, ...) |
-| `data/corpus/` | The six source documents, versioned; nothing here writes to them |
-| `docs/EVAL_REPORT.md` | Numbers you produced, before and after, with the command behind each |
-| `docs/SKILL.md` | A skill another assistant can load (session 10) |
-| `docs/adr/0001-run-shape.md` | The architecture decision and what would reverse it (session 10) |
-| `docs/RETENTION.md` | What a session remembers, and what it refuses to (session 11) |
-| `docs/ISSUES.md` | The ranked issue list (session 9, kept until 14) |
-
-Built during the Dev3Pack AI Engineering bootcamp, on the course package at
-commit `1de8649529156c35bdeafacfbbef40726a9b0fba` of https://github.com/Gecko-Academy/dev3pack-cohort-2026-09.
+| `agent.py` | `YourAgent`, the application wrapper and safety checks |
+| `tests/test_contract.py` | Offline contract tests, including the Rank 1 trace regression |
+| `data/corpus/` | Six source documents; application code treats them as read-only |
+| `docs/EVAL_REPORT.md` | Historical before/after trace-fidelity evaluation and limitations |
+| `docs/SKILL.md` | Bounded audit workflow for retrieved content |
+| `docs/adr/0001-run-shape.md` | Architecture decision and reversal condition |
+| `docs/RETENTION.md` | Session-state and memory retention boundaries |
+| `docs/ISSUES.md` | Ranked issues and the Rank 1 correction |

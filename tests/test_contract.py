@@ -1,27 +1,22 @@
-"""The capstone contract, as tests against `YourAgent`.
+"""The capstone contract, as deterministic tests against `YourAgent`.
 
-Offline and free: every model here is a fake written in this file, so the
-verdict is the same on every machine and in CI. Each test is named after the
-part of the contract it guards, so one part runs on its own:
+The tests use local doubles rather than a live provider, so these checks run
+offline. Each test is named after the contract it guards; run a focused group
+with `-k` when diagnosing a failure:
 
-    uv run pytest -k refusal      # a question the corpus does not answer
-    uv run pytest -k citation     # a citation retrieval never returned
-    uv run pytest -k injection    # an instruction inside retrieved text
-    uv run pytest -k provider     # a provider that raises, or hangs
+    uv run pytest -k refusal      # unsupported-question behavior
+    uv run pytest -k citation     # citation filtering and review fallback
+    uv run pytest -k injection    # instructions inside retrieved text
+    uv run pytest -k provider     # provider exceptions
     uv run pytest -k timeout      # a provider that hangs
-    uv run pytest -k tools        # no writing tool is wired (session 12)
-    uv run pytest -k memory       # what a session remembers (session 11)
-    uv run pytest -k regression   # the test for rank 1 of docs/ISSUES.md (session 14)
+    uv run pytest -k tools        # registered reader tools
+    uv run pytest -k memory       # SessionState and MemoryStore
+    uv run pytest -k regression   # Rank 1 trace-fidelity regression
 
-Three tests are marked `xfail(strict=True)`: the starter agent does not do that
-part of the contract yet, and the marker says which session teaches it. When
-your agent starts doing it, the test passes, and `strict=True` turns that pass
-into a failure that says "XPASS". That is your cue: delete the marker, and the
-test becomes a pass you earned. `raises=AssertionError` means the xfail only
-counts when the CONTRACT fails, never a typo or a crash in the test itself.
-
-One more is a `skip` placeholder, for work that does not exist until a later
-session: replace the body with the real test when you get there.
+The Rank 1 regression test is active. It verifies that a provider failure
+preserves retrieval, failed-call, and decision events in the returned trace.
+These deterministic tests do not measure live-provider grounded-answer quality
+or establish comprehensive prompt-injection coverage.
 """
 
 from __future__ import annotations
