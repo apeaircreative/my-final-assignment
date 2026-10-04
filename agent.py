@@ -117,6 +117,26 @@ class TimeoutClient:
             raise error[0]
         return result[0]
 
+
+class needs_human_review:
+    """Decide when an answer should be escalated to a human reviewer."""
+
+    def should_review(self, answer: ResearchAnswer) -> bool:
+        if answer.citations:
+            return False
+        if answer.needs_human_review:
+            return True
+        return answer.confidence < 0.35
+
+    def fallback(self, answer: ResearchAnswer) -> ResearchAnswer:
+        return ResearchAnswer(
+            answer="I don't know based on the provided corpus.",
+            citations=(),
+            confidence=min(answer.confidence, 0.2),
+            needs_human_review=True,
+        )
+
+
 class YourAgent:
     """The agent the tests and the grader run. Make it yours."""
 
@@ -197,6 +217,12 @@ class YourAgent:
                 ),
             )
 
+        review_gate = needs_human_review()
+        if review_gate.should_review(result.answer):
+            result = AgentResult(
+                answer=review_gate.fallback(result.answer),
+                trace=result.trace,
+            )
         return result
 
     def __call__(self, question: str) -> ResearchAnswer:
