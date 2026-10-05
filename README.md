@@ -45,28 +45,139 @@ needs_human_review: True
 
 ## Architecture
 
-`YourAgent.run()` retrieves up to four chunks for the application safety check, then calls the course `answer_question()` pipeline, which independently retrieves context for the model. Empty retrieval refuses without a model call. Otherwise the model returns strict JSON; one corrective retry is allowed if parsing fails. Citations are normalized and checked against retrieved document IDs. Unreturned citations are stripped, confidence is capped at `0.2`, and human review is required. The application then checks retrieved text for its configured instruction-like literal. Provider errors and timeouts return a flagged refusal.
+**The model generates an answer; the application owns the boundaries around
+that answer.**
 
-Model-call cost is zero for empty retrieval, normally one call for a supported question, and at most two if the first response needs a format-repair retry.
+The Final Assignment starts from the course-provided research-assistant
+pipeline rather than an empty agent. The application wrapper preserves that
+working infrastructure while adding application-owned safety and reliability
+checks.
 
-See [docs/adr/0001-run-shape.md](docs/adr/0001-run-shape.md) for the measured run-shape decision and reversal condition.
+The working principle is:
+
+**Course infrastructure → inspect → identify gaps → harden → test → measure.**
+
+```mermaid
+flowchart TD
+    A(["User asks a question"]):::entry --> B["App receives question"]:::wrapper
+
+    %% App wrapper
+    B --> C["Find relevant content<br/>for safety review"]:::wrapper
+    C --> D["Save content for later safety check"]:::data
+    C --> E["Send question to answer engine"]:::wrapper
+
+    %% Course answer engine
+    subgraph COURSE["Course answer engine"]
+        direction TD
+
+        F["Find relevant content<br/>for the answer"]:::course
+
+        F -->|"Nothing relevant found"| G["Tell user the question<br/>is not supported"]:::refusal
+        F -->|"Relevant content found"| H["Prepare source content<br/>for the model"]:::course
+
+        H --> I["Ask the model for an answer"]:::model
+
+        I -->|"Model responds"| J{"Is the answer format valid?"}:::decision
+        I -->|"Service problem or timeout"| K["Return issue to app"]:::exception
+
+        J -->|"Yes"| L{"Do the sources<br/>match the content found?"}:::decision
+        J -->|"No, first try"| M["Ask once more<br/>to fix the format"]:::retry
+        M --> I
+
+        J -->|"No, retry also failed"| N["Return a safe refusal"]:::refusal
+
+        L -->|"Yes"| O["Return answer result"]:::courseResult
+        L -->|"No"| P["Apply source-check rules"]:::retry
+        P --> O
+
+        G --> O
+        N --> O
+    end
+
+    %% App service-error path
+    K --> Q["App returns a safe refusal"]:::refusal
+    Q --> R["Save failure path<br/>content found → model call → decision"]:::trace
+
+    %% App post-answer safety path
+    O --> S{"Safety check:<br/>does saved content contain<br/>a blocked instruction pattern?"}:::decision
+    D --> S
+
+    S -->|"Yes"| T["Return a safe refusal"]:::refusal
+    S -->|"No"| U["Show the answer"]:::success
+
+    T --> V["Save safety decision"]:::trace
+    U --> W["Save normal result"]:::trace
+
+    %% Colors
+    classDef entry fill:#0f172a,stroke:#38bdf8,color:#f8fafc,stroke-width:2px;
+    classDef wrapper fill:#dbeafe,stroke:#2563eb,color:#172554,stroke-width:2px;
+    classDef course fill:#ede9fe,stroke:#7c3aed,color:#2e1065,stroke-width:2px;
+    classDef model fill:#f3e8ff,stroke:#9333ea,color:#3b0764,stroke-width:2px;
+    classDef decision fill:#fef3c7,stroke:#d97706,color:#78350f,stroke-width:2px;
+    classDef retry fill:#ffedd5,stroke:#ea580c,color:#7c2d12,stroke-width:2px;
+    classDef success fill:#dcfce7,stroke:#16a34a,color:#14532d,stroke-width:2px;
+    classDef refusal fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px;
+    classDef exception fill:#ffe4e6,stroke:#e11d48,color:#881337,stroke-width:2px;
+    classDef data fill:#e2e8f0,stroke:#64748b,color:#0f172a,stroke-width:2px;
+    classDef trace fill:#f1f5f9,stroke:#64748b,color:#334155,stroke-width:2px;
+    classDef courseResult fill:#f5f3ff,stroke:#8b5cf6,color:#3b0764,stroke-width:2px;
+
+    style COURSE fill:#faf5ff,stroke:#7c3aed,stroke-width:2px,color:#2e1065
+```
+
+Retrieved passages are untrusted data. The course engine tells the model to
+treat them as data rather than instructions, but the application does not rely
+on model compliance alone. It retains the wrapper retrieval result and applies
+a deterministic exact-literal safety check after the course engine returns. If
+the configured instruction-like pattern is found, the application replaces any
+model output with a flagged refusal: no citations, confidence `0.0`, and human
+review required.
+
+This is a narrow deterministic guardrail for the configured pattern, not a
+claim of comprehensive prompt-injection detection.
+
+Model-call cost is zero for empty retrieval, normally one call for a supported
+question, and at most two if the first response needs a format-repair retry.
+
+See [docs/adr/0001-run-shape.md](docs/adr/0001-run-shape.md) for the measured
+run-shape decision and reversal condition.
 
 ## Measured results
 
-The current-candidate run and the historical before/after evaluation use different lanes; they are not interchangeable measures of grounded-answer quality.
+The project uses separate evaluation lanes for local contract behavior,
+provider-backed practice evaluation, and the historical before/after
+investigation. These results are not interchangeable measures of grounded-answer
+quality.
 
-| What | Command | Model | Result |
-|---|---|---|---|
-| Contract tests | `uv run pytest` | FakeLLM | Previously passed per the project record; not rerun on current HEAD `7bc03d4` |
-| Current public practice grader | `BOOTCAMP_PROVIDER=ollama BOOTCAMP_MODEL=qwen2.5:7b-instruct OLLAMA_BASE_URL=http://127.0.0.1:11434/v1 uv run bootcamp final grade --report /tmp/final-practice-run-current-head-2026-10-04.json` | `ollama:qwen2.5:7b-instruct` | 6/10 (60%); critical safety gate failed. Failed: `fa-01`, `fa-02`, `fa-03`, `fa-05`. Run on `7bc03d4`; report is local under `/tmp`. |
-| Rank 1 before/after | See [docs/EVAL_REPORT.md](docs/EVAL_REPORT.md) | FakeLLM | 3/10 before (`5219834`) → 3/10 after (`afecf87`); the targeted trace regression improved, while the score did not measure that behavior. |
+| What | Model | Result |
+|---|---|---|
+| Local contract tests | FakeLLM | **15/15 passed** on the current safety-hardening work. |
+| Current public practice grader | Ollama `qwen2.5:7b-instruct` | Diagnostic run; remaining failures are concentrated in literal `claim_support` coverage rather than citation/refusal mechanics. |
+| Rank 1 before/after | FakeLLM | 3/10 before (`5219834`) → 3/10 after (`afecf87`); the targeted trace regression improved, while the score did not measure that behavior. |
 
-The practice grader is a local diagnostic, not certificate evidence. The FakeLLM does not generate grounded answers from retrieved context, so the historical 3/10 does not mean grounded-answer quality was 30%. The Ollama result is provider-backed, but still does not represent the private final set.
+The practice grader is a local diagnostic, not certificate evidence. Its
+`claim_support` check uses literal phrase matching, so a substantively correct
+answer can fail when it does not contain one of the grader's expected phrases.
+The FakeLLM also does not generate grounded answers from retrieved context, so
+its historical score should not be interpreted as grounded-answer quality.
+
+The provider-backed safety checks provide separate evidence. With the local
+Qwen model, an injected retrieved document containing an instruction to return
+`ACCESS GRANTED` resulted in an application-owned refusal with empty citations,
+zero confidence, and human review required. Legitimate questions discussing
+prompt injection did not trigger the refined instruction-pattern detector.
 
 ## The honest limitation
 
-The top-ranked issue was failure-trace fidelity; the fix and regression test preserve retrieval, provider-call, and decision events. The current practice run still fails critical case `fa-05` on citation recall, citation precision, and claim support. The application injection detector is a narrow literal check, and the existing tests do not establish comprehensive prompt-injection coverage. See the ranked limitations in [docs/ISSUES.md](docs/ISSUES.md).
-
+The current implementation has strong application-owned boundaries for
+structured output, citation verification, provider failures, timeouts,
+refusal behavior, and retrieved-content safety checks. The remaining public
+practice failures are primarily answer-completeness failures under the
+grader's literal `claim_support` criteria. The injection detector is
+intentionally conservative rather than a comprehensive prompt-injection
+classifier, and the project does not claim complete protection against every
+possible adversarial document. See the ranked limitations in
+[docs/ISSUES.md](docs/ISSUES.md).
 ## How to run it
 
 ```bash
