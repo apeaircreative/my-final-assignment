@@ -93,6 +93,24 @@ def answer_with_state(
 
     return result
 
+PROMPT_EXTENSION = (
+    "When the provided context uses specific technical terminology that directly "
+    "supports the answer, preserve that terminology rather than replacing it "
+    "with a broader paraphrase.\\n"
+)
+
+
+class PromptExtensionClient:
+    def __init__(self, client: LLMClient) -> None:
+        self.client = client
+
+    def complete(self, system: str, user: str) -> str:
+        return self.client.complete(
+            system=system + "\\n" + PROMPT_EXTENSION,
+            user=user,
+        )
+
+
 class TimeoutClient:
     def __init__(self, client: LLMClient, timeout_s: float) -> None:
         self.client = client
@@ -173,7 +191,8 @@ class YourAgent:
         )
 
         try:
-            timeout_client = TimeoutClient(self.client, self.timeout_s)
+            prompt_client = PromptExtensionClient(self.client)
+            timeout_client = TimeoutClient(prompt_client, self.timeout_s)
             result = answer_question(
                 question,
                 self.documents,
