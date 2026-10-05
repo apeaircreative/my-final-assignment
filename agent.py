@@ -118,23 +118,18 @@ class TimeoutClient:
         return result[0]
 
 
-class needs_human_review:
-    """Decide when an answer should be escalated to a human reviewer."""
+def _needs_application_refusal(result: AgentResult) -> bool:
+    """Refuse model-flagged answers unless review came from citation sanitization."""
 
-    def should_review(self, answer: ResearchAnswer) -> bool:
-        if answer.citations:
-            return False
-        if answer.needs_human_review:
-            return True
-        return answer.confidence < 0.35
+    if not result.answer.needs_human_review:
+        return False
 
-    def fallback(self, answer: ResearchAnswer) -> ResearchAnswer:
-        return ResearchAnswer(
-            answer="I don't know based on the provided corpus.",
-            citations=(),
-            confidence=min(answer.confidence, 0.2),
-            needs_human_review=True,
-        )
+    citation_validation_review = any(
+        event.kind == "decision"
+        and event.detail.startswith("fabricated citations stripped:")
+        for event in result.trace
+    )
+    return not citation_validation_review
 
 
 class YourAgent:
@@ -218,11 +213,16 @@ class YourAgent:
             )
 
         
-        review_gate = needs_human_review()
-        if review_gate.should_review(result.answer):
+        if _needs_application_refusal(result):
             result = AgentResult(
-                answer=review_gate.fallback(result.answer),
-                trace=result.trace,
+                answer=_refusal(),
+                trace=result.trace
+                + (
+                    TraceEvent(
+                        "decision",
+                        "answer requested human review; flagged refusal",
+                    ),
+                ),
             )
         return result
 
