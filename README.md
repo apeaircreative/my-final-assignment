@@ -221,7 +221,8 @@ selected public cases, not sufficient evidence to change the default. See the
 [prompt and grader analysis](docs/extra.md#prompt-and-grader-inspection) and
 both linked artifacts. Before adopting the instruction, validate on
 independently authored held-out questions and inspect grounding against the
-retrieved source.
+retrieved source. The recorded R&D priority matrix and completed claim-by-claim
+review are in [docs/extra.md](docs/extra.md#rd-priority-matrix).
 
 For that exploratory check, run the paired held-out review harness once:
 

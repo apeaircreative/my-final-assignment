@@ -475,6 +475,45 @@ use a newly authored, independently reviewed evaluation set and include
 checks for correctness, completeness, citation support, unsupported additions,
 and safety—not just answer length or public-grader phrase hits.
 
+### R&D priority matrix
+
+Use this priority order to guide follow-up work; it is based on current
+repository evidence, not a claim about private-grader performance.
+
+| Priority | Work | Rationale / source | Exit criteria | Status |
+|---|---|---|---|---|
+| **P1** | Audit the held-out answers claim by claim against the retrieved passages. | The [RAG guidance](../data/corpus/rag-basics.md) says to inspect whether the needed passage reached the prompt and separate retrieval from generation failure. The held-out artifact preserves both answers and passages. | Record supported claims, omissions, and overstatements for each answer; no model judge is authoritative. | Complete below. |
+| **P2** | Compare baseline and item-detail on a fresh, balanced, independently reviewed 8–20-case set. | [Evaluation guidance](../data/corpus/evaluation-basics.md) recommends a fixed labeled set, unhappy paths, and changing one thing at a time. The current six cases have already influenced the prompt decision and are no longer untouched. | Same questions/settings in both conditions; review completeness, grounding, citations, refusal, adversarial behavior, and regressions. | Next. |
+| **P3** | If P2 supports the candidate, run the complete public practice grader as a separate regression check. | It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment. | Preserve the report and inspect safety/refusal and citation regressions alongside phrase-based results. | Not started. |
+| **P4** | Defer retrieval redesign, further top-k tuning, and runtime multi-agent/subagent changes unless measured evidence points there. | The held-out run retrieved and cited the expected source for every question. [Agent-loop guidance](../data/corpus/agent-loops.md) recommends the least autonomy that works because each step up adds latency, cost, and failure modes. | Reopen only when a repeatable failure pattern calls for the added complexity. | Deferred. |
+
+### P1: source audit of the held-out comparison
+
+Reviewed the twelve answers in
+[`heldout_20261019T155719476244Z.json`](../runs/heldout-prompts/heldout_20261019T155719476244Z.json)
+against the passages captured in that artifact and the six versioned corpus
+documents. Every answer cited its expected source, and each expected source was
+present in the recorded retrieval. These are source-review observations, not
+automated scores.
+
+| Case | Baseline | Item-detail condition | Audit |
+|---|---|---|---|
+| `loop-duplicate-call` | Correctly names a same-arguments loop-detection guard and call/token/time limits, but says the repeated call "typically results in a refusal with an explanation." | Says to stop in a defined state and then adds that a duplicate call triggers loop detection; it also suggests refusal and "rather than truncating silently." | **Potential overstatement in both.** [Agent Loops](../data/corpus/agent-loops.md) lists repeated identical calls as a loop-detection stopping condition. It separately says budget exhaustion should stop in a defined state, typically refusal, rather than silent truncation. The answers blur those cases. |
+| `rag-failure-diagnosis` | Correctly says to check whether the right passage reached the prompt and distinguishes retrieval fixes from generation causes. | Same distinction, with explicit conditional remedies. | **Supported** by [RAG Basics](../data/corpus/rag-basics.md). |
+| `mcp-boundary` | Correctly distinguishes tool, skill, and server; includes read-only, credential, trust, and offline precautions. Its MCP-server definition omits resources/prompts and the protocol boundary. | Gives the more complete definition (tools, resources, prompts behind a protocol boundary) and aligned safety precautions. | **Baseline incomplete; variant better supported and more complete**, based on [MCP Overview](../data/corpus/mcp-overview.md). |
+| `evaluation-design` | Gives set size, expected properties, unhappy paths, one-change comparison, and reporting regressions. | Adds concrete expected-property examples and explicit one-change discipline. | **Both substantially supported.** Neither mentions the source's code-check-versus-LLM-judge guidance; [Evaluation Basics](../data/corpus/evaluation-basics.md) supplies that distinction. This is an omission, not a contradiction. |
+| `structured-retry` | Correctly states one corrective retry and typed refusal with human review on second failure, but omits strict parsing/validation. | Includes strict parsing, rejecting unknown fields, one corrective retry, and typed refusal on second failure. | **Baseline incomplete; variant more complete**, supported by [Structured Outputs](../data/corpus/structured-outputs.md). |
+| `rag-index-tradeoff` | Correctly states lexical indexing is deterministic, cheap, debuggable and semantic search improves paraphrase recall at the cost of dependency/inspectability. | Same facts, with clearer explanation of the tradeoff. | **Both supported** by [RAG Basics](../data/corpus/rag-basics.md). |
+
+P1 is complete. Main actionable finding: the item-detail prompt improved
+explanation and coverage in several answers, but it did not prevent the
+loop-detection/refusal conflation. Do not adopt it based on this sample alone.
+P2 should use a fresh review set with an explicit criterion separating
+loop-detection from budget-exhaustion behavior, plus unsupported and adversarial
+cases. Keep each criterion source-anchored and judge answers against retrieved
+evidence; do not tune solely for phrase matches. The source itself recommends
+adversarial evaluation in [Prompt Injection](../data/corpus/prompt-injection.md).
+
 Use `uv run python scripts/compare_topk.py` to repeat the comparison on the same
 public set. The artifacts preserve per-case answers, grader dimensions, traces,
 retrieved IDs/scores, timings, and source hashes without copying question text.
