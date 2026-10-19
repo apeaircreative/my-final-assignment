@@ -160,6 +160,7 @@ quality.
 | Coverage-instruction experiment | Same model, k=4 | **0/6 passed**, versus 4/6 for the corrected k=4 baseline. All six failed `claim_support`; no provider failures; 3m08s wall time. Do not adopt this prompt variant based on this evidence. [Artifact](runs/controlled-cases/controlled_20261019T152136795480Z.json). |
 | Item-detail prompt comparison, corrected source | Same model, k=4 | Baseline: 3/6; item-detail: 5/6. `fa-05` improved from 0/3 to 2/3; `fa-07` passed 3/3 in both conditions. Sequential runs, zero provider failures; ~4m42s and ~4m38s respectively. Promising public-set signal, not validation; [baseline artifact](runs/controlled-cases/controlled_20261019T153350983580Z.json), [variant artifact](runs/controlled-cases/controlled_20261019T153909079243Z.json). |
 | Source-anchored held-out review | Same model, k=4 | Six exploratory questions, baseline then item-detail; all 12 calls completed with zero provider failures and cited the expected evidence source. Variant answers were fuller, with one potential overstatement in the loop case. Human-reviewed only; no aggregate score and not private-grader evidence. [Artifact](runs/heldout-prompts/heldout_20261019T155719476244Z.json). |
+| P2 source-anchored comparison | Same model, k=4 | Eight cases per condition; 14 model calls, zero provider failures. Both refused the unsupported case and resisted the credential request. Baseline fabricated a citation which the app stripped and flagged; item-detail had a chunking overstatement. Qualitative single-sample review, not a score. [Artifact](runs/heldout-prompts/heldout_20261019T162557469738Z.json). |
 | Prompt-format correction | Offline test | `PromptExtensionClient` previously inserted literal `\n` characters instead of line breaks. Fixed and covered by a regression test; historical model runs used the old prompt formatting. |
 | Rank 1 before/after | FakeLLM | 3/10 before (`5219834`) → 3/10 after (`afecf87`); the targeted trace regression improved, while the score did not measure that behavior. |
 
@@ -224,21 +225,12 @@ independently authored held-out questions and inspect grounding against the
 retrieved source. The recorded R&D priority matrix and completed claim-by-claim
 review are in [docs/extra.md](docs/extra.md#rd-priority-matrix).
 
-For that exploratory check, run the paired held-out review harness once:
-
-```bash
-BOOTCAMP_PROVIDER=ollama \
-BOOTCAMP_MODEL=qwen2.5:7b-instruct-baseline \
-OLLAMA_BASE_URL=http://127.0.0.1:11434/v1 \
-uv run python scripts/compare_heldout_prompts.py
-```
-
-It makes 12 calls (six new source-anchored questions under each prompt
-condition), sequentially, and saves answers, retrieved passages, traces, and
-human review criteria under `runs/heldout-prompts/`. It does not compute a
-public-practice or private-grader score; use the recorded source evidence to
-review factual coverage, citation support, unsupported claims, and regressions.
-This is an exploratory sample, not private-grader evidence.
+The P2 candidate set is now consumed; do not reuse it for prompt tuning. Its
+artifact and source review are in
+[docs/extra.md](docs/extra.md#p2-paired-comparison-results). The next priority
+is P3: run the full public practice grader as a separate regression check
+before making a prompt-adoption decision. This remains distinct from, and does
+not substitute for, the unavailable private grader.
 
 The first run showed k=4 passing the critical gate while k=5 failed it, but
 that did not reproduce: in a reversed-order repeat, both k values failed the
@@ -311,4 +303,5 @@ The repository is based on the Dev3Pack final-assignment template and course pac
 | `scripts/controlled_cases.py` | Repeated critical-case experiment with explicit Ollama sampling options |
 | `scripts/compare_heldout_prompts.py` | Sequential baseline/item-detail comparison on source-anchored review questions |
 | `data/evals/heldout_item_detail.json` | Exploratory held-out prompts and human-only source review criteria |
+| `data/evals/heldout_item_detail_p2.json` | Fresh candidate P2 review set; review and freeze before running |
 | `.github/skills/retrieved-content-safety-audit/SKILL.md` | Copilot-discoverable retrieved-content audit workflow |
