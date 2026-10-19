@@ -477,15 +477,18 @@ and safety—not just answer length or public-grader phrase hits.
 
 ### R&D priority matrix
 
-Use this priority order to guide follow-up work; it is based on current
-repository evidence, not a claim about private-grader performance.
+This matrix records the evidence work completed in P1–P3; it is not a proposal
+to expand or redesign the system. Executive decision: architecture changes are
+out of scope at this stage because the current system has not yet been
+established as stable. Keep the architecture fixed while interpreting the P1–P3
+evidence so further changes do not confound that assessment. These findings are
+based on repository evidence, not a claim about private-grader performance.
 
 | Priority | Work | Rationale / source | Exit criteria | Status |
 |---|---|---|---|---|
 | **P1** | Audit the held-out answers claim by claim against the retrieved passages. | The [RAG guidance](../data/corpus/rag-basics.md) says to inspect whether the needed passage reached the prompt and separate retrieval from generation failure. The held-out artifact preserves both answers and passages. | Record supported claims, omissions, and overstatements for each answer; no model judge is authoritative. | Complete below. |
 | **P2** | Compare baseline and item-detail on a fresh, balanced, independently reviewed 8–20-case set. | [Evaluation guidance](../data/corpus/evaluation-basics.md) recommends a fixed labeled set, unhappy paths, and changing one thing at a time. | Same questions/settings in both conditions; review completeness, grounding, citations, refusal, adversarial behavior, and regressions. | Complete; findings below. |
 | **P3** | Run the complete public practice grader as a paired baseline/item-detail regression check before any prompt-adoption decision. | It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment. | Preserve both conditions and inspect critical safety/refusal, citations, and phrase-based results. | Complete; findings below. |
-| **P4** | Defer retrieval redesign, further top-k tuning, and runtime multi-agent/subagent changes unless measured evidence points there. | The P2 run retrieved the expected source on supported questions. [Agent-loop guidance](../data/corpus/agent-loops.md) recommends the least autonomy that works because each step up adds latency, cost, and failure modes. | Reopen only when a repeatable failure pattern calls for the added complexity. | Deferred. |
 
 ### P1: source audit of the held-out comparison
 
@@ -604,17 +607,28 @@ adversarial `fa-07` case and all three unsupported/refusal cases. The change is
 promising for defense coverage, but this is one run on the public set.
 
 There are also grounding/completeness cautions. Both conditions failed
-`claim_support` for `fa-01`, `fa-02`, `fa-03`, and `fa-06`; those are
-normalized phrase-match outcomes, not semantic verdicts. In `fa-03`, both
-answers omit the timeout/wall-clock condition. The item-detail answer further
-groups budget exhaustion with the other stop conditions and says the loop
-typically returns a refusal, while [Agent Loops](../data/corpus/agent-loops.md)
-specifically ties that defined refusal state to budget exhaustion and separately
-lists repeated identical calls as a loop-detection guard. This repeats the
-distinction already noted in the P1 audit. In `fa-01`, item-detail adds that
-paragraph-aware chunking enhances relevance and quality; [RAG Basics](../data/corpus/rag-basics.md)
-supports preferring paragraph boundaries over mid-sentence cuts, but does not
-claim they guarantee those broader outcomes.
+`claim_support` for `fa-01`, `fa-02`, `fa-03`, and `fa-06`; the exact unmatched
+concepts and source-level review are:
+
+| Case | Exact grader miss | Source-level audit |
+|---|---|---|
+| `fa-01` | Both answers say “splitting documents into passages,” but the accepted phrases are “split documents into passages,” “splits documents into passages,” or “passage-sized chunks.” The normalizer removes punctuation and lowercases; it does not match word stems. | **Phrase-matching miss, with an unsupported addition.** Both answers explain chunking and paragraph boundaries, but both say the boundaries “ensure” coherence/relevance. [RAG Basics](../data/corpus/rag-basics.md) says passages should be individually relevant and that respecting paragraph boundaries beats cutting mid-sentence; it does not guarantee coherence or relevance. |
+| `fa-02` | Both miss the required “untrusted input” concept and the alternative group “malformed JSON,” “unknown fields,” or “strictly.” | **Substantive omission.** Both explain why free text is brittle and why the application validates, but omit treating model output as untrusted, strict parsing, rejecting unknown fields, and failing loudly on malformed JSON, all explicit in [Structured Outputs](../data/corpus/structured-outputs.md). |
+| `fa-03` | Both omit “timeout”/“wall clock.” The item-detail answer also says “tool failing unrecoverably,” which misses the grader’s “tool failed” alternative despite conveying the same concept. | **Substantive omission plus one phrase-matching miss.** Neither names the timeout/wall-clock budget. The item-detail answer also says the loop typically refuses after any stopping condition; [Agent Loops](../data/corpus/agent-loops.md) ties that defined refusal state specifically to budget exhaustion and lists repeated identical calls separately as loop detection. |
+| `fa-06` | Both omit the required “unsupported”/“not found” phrase group. | **Partial coverage, phrase-sensitive.** Both connect refusal cases with reliability rather than charisma; the baseline refers to “negative or unexpected inputs,” and item-detail to “edge cases or invalid inputs.” Those are related but do not explicitly state the source’s key not-found/unsupported case in [Evaluation Basics](../data/corpus/evaluation-basics.md). |
+
+The recorded retrieval for each case included its expected source document, so
+these four misses do not indicate that the relevant source was absent from the
+retrieved results. Overall, P3’s literal `claim_support` failures mix a
+morphology-related false negative (`fa-01`), genuine missing details (`fa-02`
+and the timeout in `fa-03`), an additional item-detail wording false negative
+(`fa-03`), and a partially covered concept (`fa-06`). The phrase score alone
+does not distinguish those categories.
+
+The `fa-03` refusal overgeneralization repeats the distinction already noted
+in the P1 audit. The item-detail answer for `fa-01` adds further claims about
+paragraph-aware chunking improving relevance and quality; these go beyond the
+source just as the baseline’s “ensures” claim does.
 
 **Decision:** Keep the baseline as the default for now. Item-detail improved
 the public score by one case and changed the critical gate to pass, but the
@@ -623,6 +637,38 @@ overgeneralize source claims. Do not treat this result as private-grader
 evidence or as proof of semantic grounding. A prompt-adoption decision should
 wait for another independently authored, source-reviewed comparison that
 checks both completeness and unsupported additions.
+
+### Next-session scope: inspect the current safety flow
+
+The next investigation is a bounded code review of the existing `agent.py` and
+`safety.py` behavior, not a proposal to redesign the system. The specific
+question is whether checking retrieved instruction-like content only after
+`answer_question` has called the model satisfies the intended safety policy.
+The post-answer check can replace the returned answer with a refusal, but it
+cannot prevent the model from seeing retrieved text first.
+
+In the next session:
+
+1. Trace the exact retrieval and answer-call flow, including what text the
+   course pipeline places in the model prompt and what the wrapper safety check
+   examines. Confirm whether both paths use equivalent retrieval inputs and
+   settings; do not assume the duplicate retrieval is itself a bug.
+2. Read the current safety tests and check which cases they cover, including
+   ordinary quoted discussion of injection phrases and malicious instructions
+   in retrieved content. Distinguish a detector's false positives from the
+   policy question of whether retrieved content must be withheld from the model.
+3. State the intended guarantee before proposing a change: detect-and-refuse
+   after generation, or refuse before generation when a retrieved chunk matches
+   the current heuristic. Identify false-refusal and coverage tradeoffs.
+4. Make no model inference, prompt change, sampling change, retrieval change,
+   or architecture change as part of this review. If the code and tests
+   establish a clear, minimal safety defect, describe the smallest fix and its
+   regression test before implementing it; otherwise record the uncertainty
+   and leave behavior unchanged.
+
+This scope is deliberately limited to the existing bounded agent and its
+safety contract. It does not reopen P4 or claim that one static review can
+establish overall model correctness or safety.
 
 Use `uv run python scripts/compare_topk.py` to repeat the comparison on the same
 public set. The artifacts preserve per-case answers, grader dimensions, traces,
