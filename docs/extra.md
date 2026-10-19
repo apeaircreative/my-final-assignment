@@ -599,6 +599,25 @@ answers, retrieved passages, traces, timings, and source hashes.
 | Baseline | 5/10 (50%) | 1/6 | 1/1 | 3/3 | **Fail (4/5)** | 0 |
 | Item-detail | 6/10 (60%) | 2/6 | 1/1 | 3/3 | **Pass (5/5)** | 0 |
 
+#### P3 same-settings repeat
+
+A second paired run is preserved in
+[`public_prompts_20261019T171823010945Z.json`](../runs/public-prompt-comparison/public_prompts_20261019T171823010945Z.json).
+It ran 17:18:23Z–17:35:14Z (**16m51.9s**) with the same question-set hash,
+model, k=4, requested temperature 0, top-p 0.1, and seed 42. Both runs had
+zero provider failures. The baseline again scored 5/10 with a 4/5 critical
+gate; item-detail again scored 6/10 with a 5/5 critical gate. All category
+scores and per-case pass/fail dimensions matched.
+
+For both conditions, all ten answer texts were byte-identical between the two
+runs; citations, retrieved content/order, and grader dimensions also matched.
+This is strong evidence of repeatability for these two runs on this fixed
+machine/model/question set and requested configuration. It is **not** evidence
+that the repeated answers are correct, fully grounded, or representative of
+unseen questions. The same source-level omissions and phrase-sensitive grader
+limitations remain. The artifact records requested sampling options; it does
+not independently verify which options the running Ollama server applied.
+
 The score increase comes from `fa-05`: baseline failed the mechanical
 `claim_support` check while item-detail passed. On source review, baseline
 described four of the five documented defenses but omitted testing with an
