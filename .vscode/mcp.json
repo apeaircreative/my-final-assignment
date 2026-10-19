@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "dev3pack-course": {
+      "type": "http",
+      "url": "https://mcp.geckovision.tech/course/mcp"
+    }
+  }
+}
