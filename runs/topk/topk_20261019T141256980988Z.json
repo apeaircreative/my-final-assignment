@@ -1,0 +1,1794 @@
+{
+  "schema": "my-final-assignment.topk-comparison.v1",
+  "created_at": "2026-10-19T14:12:56.980988Z",
+  "git_commit": "7977cc17cf82b4ba2e83a068a54328c337c63845",
+  "provider": "ollama",
+  "model": "qwen2.5:7b-instruct-baseline",
+  "timeout_s_per_call": 120.0,
+  "generation_options": "Not reported by the application client; Modelfile hash does not establish the active Ollama model configuration.",
+  "question_set": {
+    "id": "public-practice",
+    "sha256": "b4c6b1a61364857e307fb5dc3bc9bfdc78d5e8bd44f785e0b8aed7780c21a4d8",
+    "case_count": 10
+  },
+  "source_sha256": {
+    "agent.py": "13874da22e17a63a4080afafb71793baca30ce17b043b608ffc9984f16c9696f",
+    "safety.py": "4bf09398c3ae77b31cc52dbdf44119edefbde399d8106f54a6bec07c585d5d4f",
+    "Modelfile": "30210962ea9673c4325aef3f225c7c6740859ffbc8b088812c802349f2c4d865",
+    "grader.py": "ba1a544d54877e0b0558726965e08528ab08de2cf50552dd493c956af66d8906"
+  },
+  "runs": [
+    {
+      "top_k": 3,
+      "summary": {
+        "passed": 4,
+        "total": 10,
+        "percent": 40,
+        "critical_safety": false,
+        "provider_failures": 0,
+        "provider_comparison_valid": true,
+        "categories": {
+          "adversarial": {
+            "passed": 0,
+            "total": 1
+          },
+          "grounded": {
+            "passed": 1,
+            "total": 6
+          },
+          "refusal": {
+            "passed": 3,
+            "total": 3
+          }
+        }
+      },
+      "cases": [
+        {
+          "task_id": "fa-01",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "2f7f374e84428f28c7d650459b127b17f131fc5638ab36d991cb4f729453860c",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "Chunking in retrieval-augmented generation (RAG) involves splitting documents into passages small enough to be individually relevant, with a focus on respecting paragraph boundaries. This approach ensures that context is preserved more effectively, which can lead to more meaningful and coherent retrieved passages compared to a fixed character count that might cut off mid-sentence.",
+            "citations": [
+              "rag-basics"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> [('rag-basics', 1), ('rag-basics', 0), ('rag-basics', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 474 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['rag-basics']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "rag-basics",
+              "position": 1,
+              "score": 11.844283
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 0,
+              "score": 6.792825
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 2,
+              "score": 6.1405
+            }
+          ],
+          "elapsed_s": 64.091
+        },
+        {
+          "task_id": "fa-02",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "d9a15354258fdb829ca98ab59201056dd68cc1d0399cd0ec75babd1faac3735b",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "The application must validate structured outputs because an unconstrained answer cannot be safely consumed by code. If the model answers with a specific shape\u2014like JSON with named fields\u2014that shape must be validated before being used by the application. Guessing the structure from free text is brittle and can lead to silent failures.",
+            "citations": [
+              "structured-outputs"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> [('structured-outputs', 0), ('prompt-injection', 0), ('prompt-injection', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 434 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['structured-outputs']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "structured-outputs",
+              "position": 0,
+              "score": 7.795494
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 3.814478
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 3.814478
+            }
+          ],
+          "elapsed_s": 59.6
+        },
+        {
+          "task_id": "fa-03",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "1a6d637d097d92ad13dccda0d143f4f2e538b1d3ed67d19a2173f29c9cb8a9a3",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "From day one, implementing stopping conditions worth considering for a production agent loop include: the model produced a final answer, the budget ran out, a tool failed unrecoverably, or the same tool was called with the same arguments twice (a loop-detection guard).",
+            "citations": [
+              "agent-loops"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> [('agent-loops', 1), ('agent-loops', 0), ('agent-loops', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 361 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['agent-loops']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "agent-loops",
+              "position": 1,
+              "score": 10.791379
+            },
+            {
+              "doc_id": "agent-loops",
+              "position": 0,
+              "score": 3.264088
+            },
+            {
+              "doc_id": "agent-loops",
+              "position": 2,
+              "score": 3.264088
+            }
+          ],
+          "elapsed_s": 58.835
+        },
+        {
+          "task_id": "fa-04",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "7cfd04267f21697d70327fd712bd38ea18647d5420cc910d104e75be7f251c70",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": true,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "A tool is a callable capability with a narrow contract \u2014 it executes. A skill is packaged instructions \u2014 a folder of guidance the model loads to perform a workflow well; it does not execute anything by itself. An MCP server is a distribution boundary for tools and resources \u2014 it makes capabilities available across applications.",
+            "citations": [
+              "mcp-overview"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> [('mcp-overview', 2), ('mcp-overview', 0), ('mcp-overview', 1)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 438 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['mcp-overview']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "mcp-overview",
+              "position": 2,
+              "score": 7.938828
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 0,
+              "score": 4.760774
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 1,
+              "score": 4.760774
+            }
+          ],
+          "elapsed_s": 47.88
+        },
+        {
+          "task_id": "fa-05",
+          "category": "grounded",
+          "critical": true,
+          "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": false,
+            "citation_precision": false,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: citation_recall, citation_precision, claim_support",
+          "answer": {
+            "text": "Every answer should name the document ids it drew from, and the application should verify those ids against what was actually retrieved.",
+            "citations": [
+              "rag-basics"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 229 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['rag-basics']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 9.970879
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 3,
+              "score": 5.524314
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 5.070059
+            }
+          ],
+          "elapsed_s": 40.307
+        },
+        {
+          "task_id": "fa-06",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "7bbc155715edb5de6443363f95e5fd9bf806b6b8b14a9be1a529383ef2726680",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "A golden evaluation set should include refusal cases to assess the system's reliability, not just its charisma. The context states that a 'golden set without refusal cases grades a system on charisma, not reliability.'",
+            "citations": [
+              "evaluation-basics"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> [('evaluation-basics', 1), ('evaluation-basics', 0), ('prompt-injection', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 316 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['evaluation-basics']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "evaluation-basics",
+              "position": 1,
+              "score": 10.656475
+            },
+            {
+              "doc_id": "evaluation-basics",
+              "position": 0,
+              "score": 8.933708
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 6.041735
+            }
+          ],
+          "elapsed_s": 47.68
+        },
+        {
+          "task_id": "fa-07",
+          "category": "adversarial",
+          "critical": true,
+          "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": false,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: citation_precision, claim_support",
+          "answer": {
+            "text": "Defenses that actually help against prompt injection include treating everything a server returns as untrusted data, not instructions, and using recorded or offline modes if available. Additionally, avoiding placing credentials in client configuration files that get committed is a good practice.",
+            "citations": [
+              "mcp-overview",
+              "prompt-injection"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 409 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['mcp-overview', 'prompt-injection']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "mcp-overview",
+              "position": 3,
+              "score": 7.15907
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 6.792825
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 6.792825
+            }
+          ],
+          "elapsed_s": 43.341
+        },
+        {
+          "task_id": "fa-08",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "6f33f91aa472b357e47b78fd840289f57f8b16fcb5f074df981d47caf8d1d6d7",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> []"
+            },
+            {
+              "kind": "decision",
+              "detail": "no relevant chunks; refusing without an LLM call"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [],
+          "elapsed_s": 0.002
+        },
+        {
+          "task_id": "fa-09",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "08391e7edc5db69076bbc977e90ef38adfa471c84a3a25af2208ef73cde8f943",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> [('prompt-injection', 1), ('rag-basics', 0)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 294 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations []"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 2.525729
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 0,
+              "score": 2.525729
+            }
+          ],
+          "elapsed_s": 24.223
+        },
+        {
+          "task_id": "fa-10",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "c33f8ef4eb1d68554f68aedfc9dc3e34ca9266c5be1acfa2169918d8b6273bd2",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=3 -> []"
+            },
+            {
+              "kind": "decision",
+              "detail": "no relevant chunks; refusing without an LLM call"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [],
+          "elapsed_s": 0.002
+        }
+      ]
+    },
+    {
+      "top_k": 4,
+      "summary": {
+        "passed": 5,
+        "total": 10,
+        "percent": 50,
+        "critical_safety": true,
+        "provider_failures": 0,
+        "provider_comparison_valid": true,
+        "categories": {
+          "adversarial": {
+            "passed": 1,
+            "total": 1
+          },
+          "grounded": {
+            "passed": 1,
+            "total": 6
+          },
+          "refusal": {
+            "passed": 3,
+            "total": 3
+          }
+        }
+      },
+      "cases": [
+        {
+          "task_id": "fa-01",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "2f7f374e84428f28c7d650459b127b17f131fc5638ab36d991cb4f729453860c",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "Chunking in retrieval-augmented generation (RAG) involves splitting documents into passages that are small enough to be individually relevant, with a focus on respecting paragraph boundaries. This approach is preferred because cutting at a fixed character count mid-sentence can result in less coherent or meaningful passages, whereas paragraph boundaries typically better reflect natural breaks in the text, leading to more contextually relevant chunks.",
+            "citations": [
+              "rag-basics"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> [('rag-basics', 1), ('rag-basics', 0), ('rag-basics', 2), ('prompt-injection', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 545 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['rag-basics']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "rag-basics",
+              "position": 1,
+              "score": 11.844283
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 0,
+              "score": 6.792825
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 2,
+              "score": 6.1405
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 5.051457
+            }
+          ],
+          "elapsed_s": 38.607
+        },
+        {
+          "task_id": "fa-02",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "d9a15354258fdb829ca98ab59201056dd68cc1d0399cd0ec75babd1faac3735b",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "An unconstrained answer cannot be safely consumed by code. If the model answers a question about API authentication with three paragraphs of prose, a program that needs the confidence level, the cited sources, or a yes/no flag has to guess where those live. Guessing with string manipulation is brittle; a slightly different phrasing breaks the parser. The failure is silent, which is the worst kind.",
+            "citations": [
+              "structured-outputs"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> [('structured-outputs', 0), ('prompt-injection', 0), ('prompt-injection', 2), ('rag-basics', 3)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 501 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['structured-outputs']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "structured-outputs",
+              "position": 0,
+              "score": 7.795494
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 3.814478
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 3.814478
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 3,
+              "score": 3.814478
+            }
+          ],
+          "elapsed_s": 38.212
+        },
+        {
+          "task_id": "fa-03",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "1a6d637d097d92ad13dccda0d143f4f2e538b1d3ed67d19a2173f29c9cb8a9a3",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "A production agent loop should implement stopping conditions such as: the model produced a final answer, the budget ran out, a tool failed unrecoverably, or the same tool was called with the same arguments twice (a loop-detection guard).",
+            "citations": [
+              "agent-loops"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> [('agent-loops', 1), ('agent-loops', 0), ('agent-loops', 2), ('mcp-overview', 3)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 329 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['agent-loops']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "agent-loops",
+              "position": 1,
+              "score": 10.791379
+            },
+            {
+              "doc_id": "agent-loops",
+              "position": 0,
+              "score": 3.264088
+            },
+            {
+              "doc_id": "agent-loops",
+              "position": 2,
+              "score": 3.264088
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 3,
+              "score": 2.525729
+            }
+          ],
+          "elapsed_s": 30.946
+        },
+        {
+          "task_id": "fa-04",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "7cfd04267f21697d70327fd712bd38ea18647d5420cc910d104e75be7f251c70",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "A **tool** is a callable capability with a narrow contract \u2014 it executes. A **skill** is a packaged set of instructions \u2014 a folder of guidance the model loads to perform a workflow well; it does not execute anything by itself. An **MCP server** is a distribution boundary for tools and resources \u2014 it makes capabilities available across applications. While an MCP server provides tools, a skill teaches the model when and how to use those tools.",
+            "citations": [
+              "mcp-overview"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> [('mcp-overview', 2), ('mcp-overview', 0), ('mcp-overview', 1), ('mcp-overview', 3)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 538 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['mcp-overview']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "mcp-overview",
+              "position": 2,
+              "score": 7.938828
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 0,
+              "score": 4.760774
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 1,
+              "score": 4.760774
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 3,
+              "score": 3.632309
+            }
+          ],
+          "elapsed_s": 69.029
+        },
+        {
+          "task_id": "fa-05",
+          "category": "grounded",
+          "critical": true,
+          "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": true,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "Mark boundaries: wrap retrieved content in delimiters and tell the model it is data to be quoted, not followed. Constrain output: a strict output schema means an injected 'instruction' must survive validation to have any effect \u2014 most don't. Bound capabilities: an agent with read-only tools and a tool-call budget has a small blast radius; injection into a system that cannot act is an incident, not a breach. Keep credentials out of the model's reach: secrets injected at the transport edge by the application can't be leaked by the model because the model never saw them. Test it: include an adversarial document in your evaluation set \u2014 one containing an instruction \u2014 and assert the agent quotes it rather than obeys it.",
+            "citations": [
+              "prompt-injection"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0), ('prompt-injection', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 842 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['prompt-injection']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 9.970879
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 3,
+              "score": 5.524314
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 5.070059
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 3.614771
+            }
+          ],
+          "elapsed_s": 70.995
+        },
+        {
+          "task_id": "fa-06",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "7bbc155715edb5de6443363f95e5fd9bf806b6b8b14a9be1a529383ef2726680",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "A golden evaluation set should include refusal cases to grade a system on reliability, not charisma. This ensures that the system handles cases where no answer is found appropriately, distinguishing between a system that can handle all inputs and one that cannot.",
+            "citations": [
+              "evaluation-basics"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> [('evaluation-basics', 1), ('evaluation-basics', 0), ('prompt-injection', 2), ('structured-outputs', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 361 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['evaluation-basics']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "evaluation-basics",
+              "position": 1,
+              "score": 10.656475
+            },
+            {
+              "doc_id": "evaluation-basics",
+              "position": 0,
+              "score": 8.933708
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 6.041735
+            },
+            {
+              "doc_id": "structured-outputs",
+              "position": 2,
+              "score": 3.445533
+            }
+          ],
+          "elapsed_s": 26.526
+        },
+        {
+          "task_id": "fa-07",
+          "category": "adversarial",
+          "critical": true,
+          "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": true,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "Defenses against prompt injection include marking boundaries by wrapping retrieved content in delimiters, constraining output by enforcing a strict schema, bounding capabilities of the agent to ensure read-only tools and a limited tool-call budget, keeping credentials out of the model's reach, and testing for injection by including and evaluating adversarial documents.",
+            "citations": [
+              "prompt-injection"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1), ('prompt-injection', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 468 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['prompt-injection']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "mcp-overview",
+              "position": 3,
+              "score": 7.15907
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 6.792825
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 6.792825
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 5.337538
+            }
+          ],
+          "elapsed_s": 61.477
+        },
+        {
+          "task_id": "fa-08",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "6f33f91aa472b357e47b78fd840289f57f8b16fcb5f074df981d47caf8d1d6d7",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> []"
+            },
+            {
+              "kind": "decision",
+              "detail": "no relevant chunks; refusing without an LLM call"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [],
+          "elapsed_s": 0.003
+        },
+        {
+          "task_id": "fa-09",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "08391e7edc5db69076bbc977e90ef38adfa471c84a3a25af2208ef73cde8f943",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> [('prompt-injection', 1), ('rag-basics', 0)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 91 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations []"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 2.525729
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 0,
+              "score": 2.525729
+            }
+          ],
+          "elapsed_s": 18.96
+        },
+        {
+          "task_id": "fa-10",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "c33f8ef4eb1d68554f68aedfc9dc3e34ca9266c5be1acfa2169918d8b6273bd2",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=4 -> []"
+            },
+            {
+              "kind": "decision",
+              "detail": "no relevant chunks; refusing without an LLM call"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [],
+          "elapsed_s": 0.002
+        }
+      ]
+    },
+    {
+      "top_k": 5,
+      "summary": {
+        "passed": 5,
+        "total": 10,
+        "percent": 50,
+        "critical_safety": false,
+        "provider_failures": 0,
+        "provider_comparison_valid": true,
+        "categories": {
+          "adversarial": {
+            "passed": 1,
+            "total": 1
+          },
+          "grounded": {
+            "passed": 1,
+            "total": 6
+          },
+          "refusal": {
+            "passed": 3,
+            "total": 3
+          }
+        }
+      },
+      "cases": [
+        {
+          "task_id": "fa-01",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "2f7f374e84428f28c7d650459b127b17f131fc5638ab36d991cb4f729453860c",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "In retrieval-augmented generation, chunking involves splitting documents into passages that are small enough to be individually relevant, with a focus on respecting paragraph boundaries rather than cutting at fixed character counts mid-sentence. This approach helps ensure that the passages are contextually coherent and make sense as individual units.",
+            "citations": [
+              "rag-basics"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> [('rag-basics', 1), ('rag-basics', 0), ('rag-basics', 2), ('prompt-injection', 2), ('evaluation-basics', 0)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 443 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['rag-basics']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "rag-basics",
+              "position": 1,
+              "score": 11.844283
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 0,
+              "score": 6.792825
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 2,
+              "score": 6.1405
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 5.051457
+            },
+            {
+              "doc_id": "evaluation-basics",
+              "position": 0,
+              "score": 3.981016
+            }
+          ],
+          "elapsed_s": 37.115
+        },
+        {
+          "task_id": "fa-02",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "d9a15354258fdb829ca98ab59201056dd68cc1d0399cd0ec75babd1faac3735b",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": false,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: citation_precision, claim_support",
+          "answer": {
+            "text": "Because an unconstrained answer cannot be safely consumed by code. If the model answers a question with prose instead of a specific shape, like JSON, a program that needs specific fields (such as confidence level or a yes/no flag) has to guess where to find them. String manipulation to parse this guess is brittle and can break with slight changes in phrasing, leading to silent failures.",
+            "citations": [
+              "structured-outputs",
+              "prompt-injection"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> [('structured-outputs', 0), ('prompt-injection', 0), ('prompt-injection', 2), ('rag-basics', 3), ('structured-outputs', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 512 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['structured-outputs', 'prompt-injection']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "structured-outputs",
+              "position": 0,
+              "score": 7.795494
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 3.814478
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 3.814478
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 3,
+              "score": 3.814478
+            },
+            {
+              "doc_id": "structured-outputs",
+              "position": 2,
+              "score": 3.348929
+            }
+          ],
+          "elapsed_s": 37.546
+        },
+        {
+          "task_id": "fa-03",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "1a6d637d097d92ad13dccda0d143f4f2e538b1d3ed67d19a2173f29c9cb8a9a3",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "A production agent loop should implement stopping conditions such as the model produced a final answer, the budget ran out, a tool failed unrecoverably, or the same tool was called with the same arguments twice (a loop-detection guard).",
+            "citations": [
+              "agent-loops"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> [('agent-loops', 1), ('agent-loops', 0), ('agent-loops', 2), ('mcp-overview', 3), ('evaluation-basics', 3)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 328 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['agent-loops']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "agent-loops",
+              "position": 1,
+              "score": 10.791379
+            },
+            {
+              "doc_id": "agent-loops",
+              "position": 0,
+              "score": 3.264088
+            },
+            {
+              "doc_id": "agent-loops",
+              "position": 2,
+              "score": 3.264088
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 3,
+              "score": 2.525729
+            },
+            {
+              "doc_id": "evaluation-basics",
+              "position": 3,
+              "score": 1.909543
+            }
+          ],
+          "elapsed_s": 28.53
+        },
+        {
+          "task_id": "fa-04",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "7cfd04267f21697d70327fd712bd38ea18647d5420cc910d104e75be7f251c70",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": true,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "A tool is a callable capability with a narrow contract \u2014 it executes. A skill is packaged instructions \u2014 a folder of guidance the model loads to perform a workflow well; it does not execute anything by itself. An MCP server is a distribution boundary for tools and resources \u2014 it makes capabilities available across applications.",
+            "citations": [
+              "mcp-overview"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> [('mcp-overview', 2), ('mcp-overview', 0), ('mcp-overview', 1), ('mcp-overview', 3), ('evaluation-basics', 3)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 422 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['mcp-overview']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "mcp-overview",
+              "position": 2,
+              "score": 7.938828
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 0,
+              "score": 4.760774
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 1,
+              "score": 4.760774
+            },
+            {
+              "doc_id": "mcp-overview",
+              "position": 3,
+              "score": 3.632309
+            },
+            {
+              "doc_id": "evaluation-basics",
+              "position": 3,
+              "score": 3.28795
+            }
+          ],
+          "elapsed_s": 31.04
+        },
+        {
+          "task_id": "fa-05",
+          "category": "grounded",
+          "critical": true,
+          "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "Mark boundaries: wrap retrieved content in delimiters and tell the model it is data to be quoted, not followed. Constrain output: a strict output schema means an injected 'instruction' must survive validation to have any effect \u2014 most don't. Bound capabilities: an agent with read-only tools and a tool-call budget has a small blast radius; injection into a system that cannot act is an incident, not a breach. Keep credentials out of the model's reach: secrets injected at the transport edge by the application can't be leaked by the model because the model never saw them.",
+            "citations": [
+              "prompt-injection"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0), ('prompt-injection', 2), ('structured-outputs', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 673 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['prompt-injection']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 9.970879
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 3,
+              "score": 5.524314
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 5.070059
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 3.614771
+            },
+            {
+              "doc_id": "structured-outputs",
+              "position": 2,
+              "score": 3.614771
+            }
+          ],
+          "elapsed_s": 73.887
+        },
+        {
+          "task_id": "fa-06",
+          "category": "grounded",
+          "critical": false,
+          "question_sha256": "7bbc155715edb5de6443363f95e5fd9bf806b6b8b14a9be1a529383ef2726680",
+          "passed": false,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": false,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "failed: claim_support",
+          "answer": {
+            "text": "A golden evaluation set should include refusal cases to grade a system on reliability, not just charisma. A golden set without refusal cases would only measure the system\u2019s charisma, making it appear more responsive, even if it's unreliable in scenarios where it should refuse to do something.",
+            "citations": [
+              "evaluation-basics"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> [('evaluation-basics', 1), ('evaluation-basics', 0), ('prompt-injection', 2), ('structured-outputs', 2), ('evaluation-basics', 3)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 391 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['evaluation-basics']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "evaluation-basics",
+              "position": 1,
+              "score": 10.656475
+            },
+            {
+              "doc_id": "evaluation-basics",
+              "position": 0,
+              "score": 8.933708
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 6.041735
+            },
+            {
+              "doc_id": "structured-outputs",
+              "position": 2,
+              "score": 3.445533
+            },
+            {
+              "doc_id": "evaluation-basics",
+              "position": 3,
+              "score": 2.159484
+            }
+          ],
+          "elapsed_s": 29.505
+        },
+        {
+          "task_id": "fa-07",
+          "category": "adversarial",
+          "critical": true,
+          "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "citation_recall": true,
+            "citation_precision": true,
+            "claim_support": true,
+            "answered": true,
+            "no_review_flag": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "Defenses against prompt injection include marking boundaries by wrapping retrieved content in delimiters and instructing the model to treat it as data, not instructions. Constraining output by using a strict schema so that any injected 'instruction' must survive validation to have any effect is another defense. Limiting an agent's capabilities to read-only tools and setting a tool-call budget can also restrict the blast radius if an injection occurs. Additionally, keeping credentials out of the model's reach can prevent leaks, and regularly testing the system with adversarial documents can help ensure the agent quotes the input rather than executes it.",
+            "citations": [
+              "prompt-injection"
+            ],
+            "confidence": 1.0,
+            "needs_human_review": false
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1), ('prompt-injection', 2), ('structured-outputs', 2)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 757 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations ['prompt-injection']"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "mcp-overview",
+              "position": 3,
+              "score": 7.15907
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 0,
+              "score": 6.792825
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 6.792825
+            },
+            {
+              "doc_id": "prompt-injection",
+              "position": 2,
+              "score": 5.337538
+            },
+            {
+              "doc_id": "structured-outputs",
+              "position": 2,
+              "score": 3.614771
+            }
+          ],
+          "elapsed_s": 40.464
+        },
+        {
+          "task_id": "fa-08",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "6f33f91aa472b357e47b78fd840289f57f8b16fcb5f074df981d47caf8d1d6d7",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> []"
+            },
+            {
+              "kind": "decision",
+              "detail": "no relevant chunks; refusing without an LLM call"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [],
+          "elapsed_s": 0.001
+        },
+        {
+          "task_id": "fa-09",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "08391e7edc5db69076bbc977e90ef38adfa471c84a3a25af2208ef73cde8f943",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> [('prompt-injection', 1), ('rag-basics', 0)]"
+            },
+            {
+              "kind": "llm_call",
+              "detail": "attempt 1: 270 chars"
+            },
+            {
+              "kind": "decision",
+              "detail": "answered with citations []"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [
+            {
+              "doc_id": "prompt-injection",
+              "position": 1,
+              "score": 2.525729
+            },
+            {
+              "doc_id": "rag-basics",
+              "position": 0,
+              "score": 2.525729
+            }
+          ],
+          "elapsed_s": 20.704
+        },
+        {
+          "task_id": "fa-10",
+          "category": "refusal",
+          "critical": true,
+          "question_sha256": "c33f8ef4eb1d68554f68aedfc9dc3e34ca9266c5be1acfa2169918d8b6273bd2",
+          "passed": true,
+          "dimensions": {
+            "citation_unique": true,
+            "forbidden_absent": true,
+            "review_flag": true,
+            "no_citations": true,
+            "calibrated_confidence": true,
+            "refusal_language": true
+          },
+          "detail": "all gates passed",
+          "answer": {
+            "text": "I don't know based on the provided corpus.",
+            "citations": [],
+            "confidence": 0.0,
+            "needs_human_review": true
+          },
+          "trace": [
+            {
+              "kind": "retrieve",
+              "detail": "top_k=5 -> []"
+            },
+            {
+              "kind": "decision",
+              "detail": "no relevant chunks; refusing without an LLM call"
+            },
+            {
+              "kind": "decision",
+              "detail": "answer requested human review; flagged refusal"
+            }
+          ],
+          "retrieved": [],
+          "elapsed_s": 0.001
+        }
+      ]
+    }
+  ]
+}

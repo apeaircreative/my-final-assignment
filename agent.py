@@ -21,24 +21,24 @@ from __future__ import annotations
 
 import threading
 from copy import deepcopy
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from bootcamp_agent.agent import AgentResult, TraceEvent, _refusal, answer_question
-from bootcamp_agent.retrieval import retrieve
 from bootcamp_agent.config import load_settings
 from bootcamp_agent.documents import Document, load_corpus
 from bootcamp_agent.llm import LLMClient, get_client
+from bootcamp_agent.ollama import OllamaError
+from bootcamp_agent.retrieval import retrieve
 from bootcamp_agent.schema import ResearchAnswer
 from bootcamp_agent.tools import Tool, build_tools
-from bootcamp_agent.ollama import OllamaError
-
 
 from safety import contains_instruction_like_text
 
 #: The six course documents, copied in by `bootcamp capstone new`. Versioned
 #: input: nothing you build writes to it.
 CORPUS_DIR = Path(__file__).resolve().parent / "data" / "corpus"
+
 
 @dataclass
 class SessionState:
@@ -48,6 +48,7 @@ class SessionState:
     def reset(self) -> None:
         self.preferences.clear()
         self.episodes.clear()
+
 
 class MemoryStore:
     """
@@ -72,6 +73,7 @@ class MemoryStore:
         value = self._data.get((user_id, key))
         return deepcopy(value)
 
+
 def answer_with_state(
     question: str,
     state: SessionState,
@@ -93,10 +95,11 @@ def answer_with_state(
 
     return result
 
+
 PROMPT_EXTENSION = (
     "When the provided context uses specific technical terminology that directly "
     "supports the answer, preserve that terminology rather than replacing it "
-    "with a broader paraphrase.\\n"
+    "with a broader paraphrase.\n"
 )
 
 
@@ -106,7 +109,7 @@ class PromptExtensionClient:
 
     def complete(self, system: str, user: str) -> str:
         return self.client.complete(
-            system=system + "\\n" + PROMPT_EXTENSION,
+            system=system + "\n" + PROMPT_EXTENSION,
             user=user,
         )
 
@@ -115,6 +118,7 @@ class TimeoutClient:
     def __init__(self, client: LLMClient, timeout_s: float) -> None:
         self.client = client
         self.timeout_s = timeout_s
+
     def complete(self, system: str, user: str) -> str:
         result: list[str] = []
         error: list[BaseException] = []
@@ -143,8 +147,7 @@ def _needs_application_refusal(result: AgentResult) -> bool:
         return False
 
     citation_validation_review = any(
-        event.kind == "decision"
-        and event.detail.startswith("fabricated citations stripped:")
+        event.kind == "decision" and event.detail.startswith("fabricated citations stripped:")
         for event in result.trace
     )
     return not citation_validation_review
@@ -153,10 +156,11 @@ def _needs_application_refusal(result: AgentResult) -> bool:
 class YourAgent:
     """The agent the tests and the grader run. Make it yours."""
 
+    #: Shared by the pre-answer safety check and the answer pipeline.
+    top_k: int = 4
+
     #: How long one provider call may take before the agent gives up with a
-    #: flagged refusal. NOT ENFORCED YET: the starter waits for ever, which is
-    #: why the `timeout` contract test is marked xfail. The test sets this low
-    #: and expects an answer inside a second.
+    #: flagged refusal. The contract test sets this low to verify bounded waits.
     timeout_s: float = 120.0
 
     def __init__(self, client: LLMClient | None = None) -> None:
@@ -172,7 +176,7 @@ class YourAgent:
 
         USER QUESTION
             ↓
-        RETRIEVE TOP 3 CHUNKS
+        RETRIEVE TOP self.top_k CHUNKS
             ↓
         COURSE PIPELINE
              ↓
@@ -187,7 +191,7 @@ class YourAgent:
         retrieved = retrieve(
             question,
             self.documents,
-            top_k=4,
+            top_k=self.top_k,
         )
 
         try:
@@ -198,15 +202,16 @@ class YourAgent:
                 self.documents,
                 timeout_client,
                 max_tool_calls=3,
-                top_k=4,
-        )
+                top_k=self.top_k,
+            )
         except (ConnectionError, OllamaError, TimeoutError) as error:
             return AgentResult(
                 answer=_refusal(),
                 trace=(
                     TraceEvent(
                         "retrieve",
-                        f"top_k=4 -> {[(s.chunk.doc_id, s.chunk.position) for s in retrieved]}",
+                        f"top_k={self.top_k} -> "
+                        f"{[(s.chunk.doc_id, s.chunk.position) for s in retrieved]}",
                     ),
                     TraceEvent(
                         "llm_call",
@@ -231,7 +236,6 @@ class YourAgent:
                 ),
             )
 
-        
         if _needs_application_refusal(result):
             result = AgentResult(
                 answer=_refusal(),

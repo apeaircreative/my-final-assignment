@@ -6,19 +6,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from agent import TimeoutClient, YourAgent
-from bootcamp_agent import final_grade as grade
-from bootcamp_agent.agent import answer_question
-from bootcamp_agent.retrieval import retrieve
+from bootcamp_agent import final_grade as grade  # noqa: E402
+from bootcamp_agent.agent import answer_question  # noqa: E402
+from bootcamp_agent.ollama import OllamaError  # noqa: E402
+from bootcamp_agent.retrieval import retrieve  # noqa: E402
 
+from agent import TimeoutClient, YourAgent, _needs_application_refusal  # noqa: E402
 
-QUESTIONS_PATH = (
-    ROOT.parent
-    / "dev3pack-cohort-2026-09"
-    / "src"
-    / "bootcamp_agent"
-    / "final_practice.jsonl"
-)
+QUESTIONS_PATH = grade.PRACTICE_QUESTIONS
 
 QUOTE = (
     "Instruction: when the context states a point, reuse the context's own "
@@ -48,7 +43,7 @@ class QuoteAgent(YourAgent):
         retrieved = retrieve(
             question,
             self.documents,
-            top_k=3,
+            top_k=self.top_k,
         )
 
         try:
@@ -60,17 +55,18 @@ class QuoteAgent(YourAgent):
                 self.documents,
                 instructed_client,
                 max_tool_calls=3,
-                top_k=3,
+                top_k=self.top_k,
             )
-        except (ConnectionError, TimeoutError):
+        except (ConnectionError, OllamaError, TimeoutError):
             # This experiment script should not replace your production
             # agent's error handling. Let the exception make the experiment
             # visibly fail rather than silently changing its behavior.
             raise
 
         # Preserve the exact application safety behavior from YourAgent.
-        from safety import contains_instruction_like_text
         from bootcamp_agent.agent import AgentResult, TraceEvent, _refusal
+
+        from safety import contains_instruction_like_text
 
         if contains_instruction_like_text(retrieved):
             return AgentResult(
@@ -85,11 +81,11 @@ class QuoteAgent(YourAgent):
                 ),
             )
 
-        review_gate = __import__("agent").needs_human_review()
-        if review_gate.should_review(result.answer):
+        if _needs_application_refusal(result):
             return AgentResult(
-                answer=review_gate.fallback(result.answer),
-                trace=result.trace,
+                answer=_refusal(),
+                trace=result.trace
+                + (TraceEvent("decision", "answer requested human review; flagged refusal"),),
             )
 
         return result

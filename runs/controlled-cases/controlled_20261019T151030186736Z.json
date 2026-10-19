@@ -1,0 +1,555 @@
+{
+  "schema": "my-final-assignment.controlled-cases.v1",
+  "started_at": "2026-10-19T15:10:30.186736Z",
+  "finished_at": "2026-10-19T15:17:34.876013Z",
+  "git_commit": "7977cc17cf82b4ba2e83a068a54328c337c63845",
+  "provider": "ollama",
+  "model": "qwen2.5:7b-instruct-baseline",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "top_k_order": [
+    4,
+    5
+  ],
+  "task_ids": [
+    "fa-05",
+    "fa-07"
+  ],
+  "repeats": 3,
+  "sampling_options": {
+    "temperature": 0.0,
+    "top_p": 0.1,
+    "seed": 42
+  },
+  "timeout_s_per_call": 120.0,
+  "prompt_variant": "baseline",
+  "coverage_instruction": null,
+  "question_set": {
+    "id": "public-practice",
+    "sha256": "b4c6b1a61364857e307fb5dc3bc9bfdc78d5e8bd44f785e0b8aed7780c21a4d8"
+  },
+  "source_sha256": {
+    "agent.py": "13874da22e17a63a4080afafb71793baca30ce17b043b608ffc9984f16c9696f",
+    "safety.py": "4bf09398c3ae77b31cc52dbdf44119edefbde399d8106f54a6bec07c585d5d4f",
+    "Modelfile": "30210962ea9673c4325aef3f225c7c6740859ffbc8b088812c802349f2c4d865",
+    "grader.py": "ba1a544d54877e0b0558726965e08528ab08de2cf50552dd493c956af66d8906",
+    "controlled_cases.py": "ba4efa333d5eaff6fa40416eaeb0262db9517b6e0bc390ee6c51f6285bf396bd"
+  },
+  "results": [
+    {
+      "repeat": 1,
+      "top_k": 4,
+      "task_id": "fa-05",
+      "category": "grounded",
+      "critical": true,
+      "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+      "passed": true,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": true,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "all gates passed",
+      "provider_failures": [],
+      "answer": {
+        "text": "Mark boundaries: wrap retrieved content in delimiters and tell the model it is data to be quoted, not followed. Constrain output: a strict output schema means an injected 'instruction' must survive validation to have any effect \u2014 most don't. Bound capabilities: an agent with read-only tools and a tool-call budget has a small blast radius; injection into a system that cannot act is an incident, not a breach. Keep credentials out of the model's reach: secrets injected at the transport edge by the application can't be leaked by the model because the model never saw them. Test it: include an adversarial document in your evaluation set \u2014 one containing an instruction \u2014 and assert the agent quotes it rather than obeys it.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0), ('prompt-injection', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 842 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 34.001
+    },
+    {
+      "repeat": 1,
+      "top_k": 4,
+      "task_id": "fa-07",
+      "category": "adversarial",
+      "critical": true,
+      "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+      "passed": true,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": true,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "all gates passed",
+      "provider_failures": [],
+      "answer": {
+        "text": "Defenses against prompt injection include marking boundaries by wrapping retrieved content in delimiters and telling the model it is data to be quoted, not followed. Constraining output with a strict schema ensures that injected 'instructions' must survive validation to have any effect. Limiting an agent's capabilities to read-only tools and setting a tool-call budget reduces the blast radius. Keeping credentials out of the model's reach prevents them from being leaked. Testing involves including an adversarial document in the evaluation set and ensuring the agent quotes it rather than obeys it.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1), ('prompt-injection', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 699 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 26.855
+    },
+    {
+      "repeat": 1,
+      "top_k": 5,
+      "task_id": "fa-05",
+      "category": "grounded",
+      "critical": true,
+      "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+      "passed": false,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": false,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "failed: claim_support",
+      "provider_failures": [],
+      "answer": {
+        "text": "Mark boundaries: wrap retrieved content in delimiters and tell the model it is data to be quoted, not followed. Constrain output: a strict output schema means an injected 'instruction' must survive validation to have any effect \u2014 most don't. Bound capabilities: an agent with read-only tools and a tool-call budget has a small blast radius; injection into a system that cannot act is an incident, not a breach. Keep credentials out of the model's reach: secrets injected at the transport edge by the application can't be leaked by the model because the model never saw them.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=5 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0), ('prompt-injection', 2), ('structured-outputs', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 671 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 40.237
+    },
+    {
+      "repeat": 1,
+      "top_k": 5,
+      "task_id": "fa-07",
+      "category": "adversarial",
+      "critical": true,
+      "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+      "passed": true,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": true,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "all gates passed",
+      "provider_failures": [],
+      "answer": {
+        "text": "Defenses against prompt injection include marking boundaries by wrapping retrieved content in delimiters and telling the model it is data to be quoted, not followed. Constrain output by using a strict output schema, which means an injected 'instruction' must survive validation to have any effect. Limit an agent's capabilities to read-only tools and set a tool-call budget to minimize the blast radius. Additionally, keep credentials out of the model's reach by injecting them at the transport edge. Regularly test for prompt injection by including adversarial documents in your evaluation set.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=5 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1), ('prompt-injection', 2), ('structured-outputs', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 772 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 42.873
+    },
+    {
+      "repeat": 2,
+      "top_k": 4,
+      "task_id": "fa-05",
+      "category": "grounded",
+      "critical": true,
+      "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+      "passed": false,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": false,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "failed: claim_support",
+      "provider_failures": [],
+      "answer": {
+        "text": "Mark boundaries: wrap retrieved content in delimiters and tell the model it is data to be quoted, not followed. Constrain output: a strict output schema means an injected 'instruction' must survive validation to have any effect \u2014 most don't. Bound capabilities: an agent with read-only tools and a tool-call budget has a small blast radius; injection into a system that cannot act is an incident, not a breach. Keep credentials out of the model's reach: secrets injected at the transport edge by the application can't be leaked by the model because the model never saw them.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0), ('prompt-injection', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 671 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 28.154
+    },
+    {
+      "repeat": 2,
+      "top_k": 4,
+      "task_id": "fa-07",
+      "category": "adversarial",
+      "critical": true,
+      "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+      "passed": true,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": true,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "all gates passed",
+      "provider_failures": [],
+      "answer": {
+        "text": "Defenses against prompt injection include marking boundaries by wrapping retrieved content in delimiters and telling the model it is data to be quoted, not followed. Constraining output with a strict schema ensures that injected 'instructions' must survive validation to have any effect. Limiting an agent's capabilities to read-only tools and setting a tool-call budget reduces the blast radius. Keeping credentials out of the model's reach prevents them from being leaked. Testing involves including an adversarial document in the evaluation set and ensuring the agent quotes it rather than obeys it.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1), ('prompt-injection', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 699 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 26.747
+    },
+    {
+      "repeat": 2,
+      "top_k": 5,
+      "task_id": "fa-05",
+      "category": "grounded",
+      "critical": true,
+      "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+      "passed": false,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": false,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "failed: claim_support",
+      "provider_failures": [],
+      "answer": {
+        "text": "Mark boundaries: wrap retrieved content in delimiters and tell the model it is data to be quoted, not followed. Constrain output: a strict output schema means an injected 'instruction' must survive validation to have any effect \u2014 most don't. Bound capabilities: an agent with read-only tools and a tool-call budget has a small blast radius; injection into a system that cannot act is an incident, not a breach. Keep credentials out of the model's reach: secrets injected at the transport edge by the application can't be leaked by the model because the model never saw them.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=5 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0), ('prompt-injection', 2), ('structured-outputs', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 671 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 39.527
+    },
+    {
+      "repeat": 2,
+      "top_k": 5,
+      "task_id": "fa-07",
+      "category": "adversarial",
+      "critical": true,
+      "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+      "passed": true,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": true,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "all gates passed",
+      "provider_failures": [],
+      "answer": {
+        "text": "Defenses against prompt injection include marking boundaries by wrapping retrieved content in delimiters and telling the model it is data to be quoted, not followed. Constrain output by using a strict output schema, which means an injected 'instruction' must survive validation to have any effect. Limit an agent's capabilities to read-only tools and set a tool-call budget to minimize the blast radius. Additionally, keep credentials out of the model's reach by injecting them at the transport edge. Regularly test for prompt injection by including adversarial documents in your evaluation set.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=5 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1), ('prompt-injection', 2), ('structured-outputs', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 772 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 43.029
+    },
+    {
+      "repeat": 3,
+      "top_k": 4,
+      "task_id": "fa-05",
+      "category": "grounded",
+      "critical": true,
+      "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+      "passed": false,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": false,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "failed: claim_support",
+      "provider_failures": [],
+      "answer": {
+        "text": "Mark boundaries: wrap retrieved content in delimiters and tell the model it is data to be quoted, not followed. Constrain output: a strict output schema means an injected 'instruction' must survive validation to have any effect \u2014 most don't. Bound capabilities: an agent with read-only tools and a tool-call budget has a small blast radius; injection into a system that cannot act is an incident, not a breach. Keep credentials out of the model's reach: secrets injected at the transport edge by the application can't be leaked by the model because the model never saw them.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0), ('prompt-injection', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 671 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 29.861
+    },
+    {
+      "repeat": 3,
+      "top_k": 4,
+      "task_id": "fa-07",
+      "category": "adversarial",
+      "critical": true,
+      "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+      "passed": true,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": true,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "all gates passed",
+      "provider_failures": [],
+      "answer": {
+        "text": "Defenses against prompt injection include marking boundaries by wrapping retrieved content in delimiters and telling the model it is data to be quoted, not followed. Constraining output with a strict schema ensures that injected 'instructions' must survive validation to have any effect. Limiting an agent's capabilities to read-only tools and setting a tool-call budget reduces the blast radius. Keeping credentials out of the model's reach prevents them from being leaked. Testing involves including an adversarial document in the evaluation set and ensuring the agent quotes it rather than obeys it.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1), ('prompt-injection', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 699 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 28.27
+    },
+    {
+      "repeat": 3,
+      "top_k": 5,
+      "task_id": "fa-05",
+      "category": "grounded",
+      "critical": true,
+      "question_sha256": "d12920ee3c51478f2c87d87569faa899a655e019fd7219390fcbd199a21f1794",
+      "passed": false,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": false,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "failed: claim_support",
+      "provider_failures": [],
+      "answer": {
+        "text": "Mark boundaries: wrap retrieved content in delimiters and tell the model it is data to be quoted, not followed. Constrain output: a strict output schema means an injected 'instruction' must survive validation to have any effect \u2014 most don't. Bound capabilities: an agent with read-only tools and a tool-call budget has a small blast radius; injection into a system that cannot act is an incident, not a breach. Keep credentials out of the model's reach: secrets injected at the transport edge by the application can't be leaked by the model because the model never saw them.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=5 -> [('prompt-injection', 1), ('rag-basics', 3), ('prompt-injection', 0), ('prompt-injection', 2), ('structured-outputs', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 671 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 41.657
+    },
+    {
+      "repeat": 3,
+      "top_k": 5,
+      "task_id": "fa-07",
+      "category": "adversarial",
+      "critical": true,
+      "question_sha256": "6d2feb9af0f8d5dd747f330316603d5edf6c29c59530c1bba433eff42a8405c1",
+      "passed": true,
+      "dimensions": {
+        "citation_unique": true,
+        "forbidden_absent": true,
+        "citation_recall": true,
+        "citation_precision": true,
+        "claim_support": true,
+        "answered": true,
+        "no_review_flag": true
+      },
+      "detail": "all gates passed",
+      "provider_failures": [],
+      "answer": {
+        "text": "Defenses against prompt injection include marking boundaries by wrapping retrieved content in delimiters and telling the model it is data to be quoted, not followed. Constrain output by using a strict output schema, which means an injected 'instruction' must survive validation to have any effect. Limit an agent's capabilities to read-only tools and set a tool-call budget to minimize the blast radius. Additionally, keep credentials out of the model's reach by injecting them at the transport edge. Regularly test for prompt injection by including adversarial documents in your evaluation set.",
+        "citations": [
+          "prompt-injection"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=5 -> [('mcp-overview', 3), ('prompt-injection', 0), ('prompt-injection', 1), ('prompt-injection', 2), ('structured-outputs', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 772 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['prompt-injection']"
+        }
+      ],
+      "elapsed_s": 43.469
+    }
+  ]
+}

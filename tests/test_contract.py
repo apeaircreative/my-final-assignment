@@ -25,11 +25,13 @@ import json
 import threading
 
 import pytest
+from bootcamp_agent import agent as course_pipeline
 from bootcamp_agent.documents import Document
 from bootcamp_agent.llm import FakeLLM
 from bootcamp_agent.tools import Tool
 
-from agent import MemoryStore, SessionState, YourAgent, answer_with_state
+import agent as application
+from agent import MemoryStore, PromptExtensionClient, SessionState, YourAgent, answer_with_state
 
 SUPPORTED = "How does chunking work in RAG?"
 UNSUPPORTED = "What is the capital city of Mongolia?"
@@ -53,6 +55,22 @@ def _is_flagged_refusal(answer) -> bool:
     return answer.needs_human_review and answer.citations == () and answer.confidence <= 0.2
 
 
+def test_prompt_extension_uses_real_line_breaks() -> None:
+    calls = []
+
+    class RecordingClient:
+        def complete(self, system: str, user: str) -> str:
+            calls.append((system, user))
+            return "ok"
+
+    PromptExtensionClient(RecordingClient()).complete("base prompt", "question")
+
+    system, user = calls[0]
+    assert system == f"base prompt\n{application.PROMPT_EXTENSION}"
+    assert "\\n" not in system
+    assert user == "question"
+
+
 # ------------------------------------------------ a question the corpus does not answer
 
 
@@ -65,6 +83,27 @@ def test_refusal_for_an_unsupported_question_costs_zero_model_calls() -> None:
 
     assert model.calls == [], "retrieval found nothing, so the model must never be asked"
     assert _is_flagged_refusal(answer), answer
+
+
+def test_configured_top_k_is_shared_by_safety_and_answer_retrieval(monkeypatch) -> None:
+    original_retrieve = application.retrieve
+    calls: list[tuple[int, list]] = []
+
+    def recording_retrieve(question, documents, top_k=3):
+        results = original_retrieve(question, documents, top_k=top_k)
+        calls.append((top_k, results))
+        return results
+
+    monkeypatch.setattr(application, "retrieve", recording_retrieve)
+    monkeypatch.setattr(course_pipeline, "retrieve", recording_retrieve)
+    agent = YourAgent(client=FakeLLM())
+    agent.top_k = 5
+
+    result = agent.run(SUPPORTED)
+
+    assert [top_k for top_k, _ in calls] == [5, 5]
+    assert calls[0][1] == calls[1][1]
+    assert "top_k=5" in result.trace[0].detail
 
 
 # ------------------------------------------------ a citation retrieval never returned
@@ -292,6 +331,7 @@ def test_answer_with_state_applies_preference_and_caps_episodes() -> None:
         "Q: Question six",
     ]
 
+
 def test_answer_with_state_truncates_long_episode_questions() -> None:
     state = SessionState()
     model = FakeLLM(
@@ -305,6 +345,7 @@ def test_answer_with_state_truncates_long_episode_questions() -> None:
     answer_with_state(long_question, state, model)
 
     assert state.episodes[-1] == f"Q: {long_question[:60]}"
+
 
 def test_session_state_reset_clears_preferences_and_episodes() -> None:
     state = SessionState(
@@ -351,6 +392,7 @@ def test_memory_store_rejects_empty_user_ids(user_id) -> None:
 
     with pytest.raises(ValueError):
         memory.recall(user_id, "key")
+
 
 def test_regression_rank_1_of_the_issue_list() -> None:
     model = BrokenLLM()
