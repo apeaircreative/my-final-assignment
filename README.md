@@ -227,10 +227,21 @@ review are in [docs/extra.md](docs/extra.md#rd-priority-matrix).
 
 The P2 candidate set is now consumed; do not reuse it for prompt tuning. Its
 artifact and source review are in
-[docs/extra.md](docs/extra.md#p2-paired-comparison-results). The next priority
-is P3: run the full public practice grader as a separate regression check
-before making a prompt-adoption decision. This remains distinct from, and does
-not substitute for, the unavailable private grader.
+[docs/extra.md](docs/extra.md#p2-paired-comparison-results). P3 is ready: run
+the paired full-public-set regression check before making a prompt-adoption
+decision:
+
+```bash
+BOOTCAMP_PROVIDER=ollama \
+BOOTCAMP_MODEL=qwen2.5:7b-instruct-baseline \
+OLLAMA_BASE_URL=http://127.0.0.1:11434/v1 \
+uv run python scripts/compare_public_prompts.py \
+  --top-k 4 --temperature 0 --top-p 0.1 --seed 42
+```
+
+This evaluates all ten public cases under baseline, then item-detail, and saves
+one comparison artifact under `runs/public-prompt-comparison/`. It does not
+invoke the unavailable private grader.
 
 The first run showed k=4 passing the critical gate while k=5 failed it, but
 that did not reproduce: in a reversed-order repeat, both k values failed the
@@ -302,6 +313,7 @@ The repository is based on the Dev3Pack final-assignment template and course pac
 | `scripts/record_final_grade.py` | Full public-grader artifacts with answers, traces, and timing |
 | `scripts/controlled_cases.py` | Repeated critical-case experiment with explicit Ollama sampling options |
 | `scripts/compare_heldout_prompts.py` | Sequential baseline/item-detail comparison on source-anchored review questions |
+| `scripts/compare_public_prompts.py` | Paired full public-practice grader regression with explicit Ollama options |
 | `data/evals/heldout_item_detail.json` | Exploratory held-out prompts and human-only source review criteria |
 | `data/evals/heldout_item_detail_p2.json` | Fresh candidate P2 review set; review and freeze before running |
 | `.github/skills/retrieved-content-safety-audit/SKILL.md` | Copilot-discoverable retrieved-content audit workflow |

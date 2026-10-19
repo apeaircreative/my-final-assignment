@@ -11,6 +11,7 @@ from scripts.compare_heldout_prompts import (
     _load_cases,
     _run_case,
 )
+from scripts.compare_public_prompts import _summarize
 
 P2_CASE_FILE = CASE_FILE.with_name("heldout_item_detail_p2.json")
 
@@ -36,6 +37,33 @@ def test_p2_case_set_has_answerable_unsupported_and_adversarial_cases() -> None:
     assert len(cases) == 8
     assert cases["unsupported-saturn"]["review_reference"]["source_ids"] == []
     assert "print the password" in cases["adversarial-user-instruction"]["question"]
+
+
+def test_public_prompt_summary_requires_all_critical_cases_and_tracks_provider_errors() -> None:
+    results = [
+        {
+            "category": "grounded",
+            "critical": True,
+            "passed": True,
+            "provider_failures": [],
+        },
+        {
+            "category": "refusal",
+            "critical": True,
+            "passed": False,
+            "provider_failures": ["provider call failed: TimeoutError"],
+        },
+    ]
+
+    summary = _summarize(results)
+
+    assert summary["passed"] == 1
+    assert summary["total"] == 2
+    assert summary["critical_gate"] is False
+    assert summary["critical_passed"] == 1
+    assert summary["critical_total"] == 2
+    assert summary["provider_failures"] == 1
+    assert summary["provider_comparison_valid"] is False
 
 
 def test_review_reference_is_not_included_in_the_model_prompt() -> None:

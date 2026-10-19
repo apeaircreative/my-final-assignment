@@ -484,7 +484,7 @@ repository evidence, not a claim about private-grader performance.
 |---|---|---|---|---|
 | **P1** | Audit the held-out answers claim by claim against the retrieved passages. | The [RAG guidance](../data/corpus/rag-basics.md) says to inspect whether the needed passage reached the prompt and separate retrieval from generation failure. The held-out artifact preserves both answers and passages. | Record supported claims, omissions, and overstatements for each answer; no model judge is authoritative. | Complete below. |
 | **P2** | Compare baseline and item-detail on a fresh, balanced, independently reviewed 8–20-case set. | [Evaluation guidance](../data/corpus/evaluation-basics.md) recommends a fixed labeled set, unhappy paths, and changing one thing at a time. | Same questions/settings in both conditions; review completeness, grounding, citations, refusal, adversarial behavior, and regressions. | Complete; findings below. |
-| **P3** | Run the complete public practice grader as a separate regression check before any prompt-adoption decision. | It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment. | Preserve the report and inspect safety/refusal and citation regressions alongside phrase-based results. | Next. |
+| **P3** | Run the complete public practice grader as a paired baseline/item-detail regression check before any prompt-adoption decision. | It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment. | Preserve both conditions and inspect critical safety/refusal, citations, and phrase-based results. | Ready to run. |
 | **P4** | Defer retrieval redesign, further top-k tuning, and runtime multi-agent/subagent changes unless measured evidence points there. | The P2 run retrieved the expected source on supported questions. [Agent-loop guidance](../data/corpus/agent-loops.md) recommends the least autonomy that works because each step up adds latency, cost, and failure modes. | Reopen only when a repeatable failure pattern calls for the added complexity. | Deferred. |
 
 ### P1: source audit of the held-out comparison
@@ -552,6 +552,34 @@ cases appropriately in these single samples. The structured-output answers
 remained incomplete. This is qualitative evidence, not a stable rate or causal
 finding. Keep the baseline as default pending P3 and any future untouched
 review set; do not tune to this consumed P2 set.
+
+#### P3: full public practice regression
+
+P3 compares both prompts across all ten shipped public practice cases. The
+paired runner executes baseline first, then item-detail, using the same
+retrieval setting and explicit Ollama temperature, top-p, and seed. It records
+per-case answers, dimensions, traces, retrieved passages, provider failures,
+aggregate score, and the critical-safety gate in one artifact under
+`runs/public-prompt-comparison/`.
+
+Run this command locally; it does not access or invoke the private grader:
+
+```bash
+BOOTCAMP_PROVIDER=ollama \
+BOOTCAMP_MODEL=qwen2.5:7b-instruct-baseline \
+OLLAMA_BASE_URL=http://127.0.0.1:11434/v1 \
+uv run python scripts/compare_public_prompts.py \
+  --top-k 4 --temperature 0 --top-p 0.1 --seed 42
+```
+
+This evaluates 20 cases total (ten per condition); actual inference calls
+depend on which cases retrieve context and whether a format-repair retry is
+needed. Run the baseline and variant within this single sequential command so
+they use the same case set and settings without overlapping. Interpret aggregate
+scores together with the critical gate, provider failures, and case-level
+dimensions. The mechanical `claim_support` result remains phrase matching;
+P3 is a public regression check, not proof of semantic grounding or private
+grader eligibility.
 
 Use `uv run python scripts/compare_topk.py` to repeat the comparison on the same
 public set. The artifacts preserve per-case answers, grader dimensions, traces,
