@@ -651,16 +651,19 @@ source just as the baseline’s “ensures” claim does.
 
 **Decision:** Keep the baseline as the default for now. Item-detail improved
 the public score by one case and changed the critical gate to pass, but the
-result is a single public-set run, and its extra explanation can still
-overgeneralize source claims. Do not treat this result as private-grader
-evidence or as proof of semantic grounding. A prompt-adoption decision should
-wait for another independently authored, source-reviewed comparison that
-checks both completeness and unsupported additions.
+result is two identical runs of the same public set, and its extra explanation
+can still overgeneralize source claims. Do not treat repeatability as evidence
+about the private grader or as proof of semantic grounding. Any prompt-adoption
+decision should wait for another independently authored, source-reviewed
+comparison that checks both completeness and unsupported additions.
 
 ### Next-session scope: inspect the current safety flow
 
-The next investigation is a bounded code review of the existing `agent.py` and
-`safety.py` behavior, not a proposal to redesign the system. The specific
+P3 is now repeated twice with byte-identical answers, retrievals, and grader
+outcomes under the recorded setup. This establishes repeatability only for
+these runs, not answer correctness or generalization. Do not spend the next
+session on another P3 repeat. Instead, conduct a bounded code review of the
+existing `agent.py` and `safety.py` behavior, not a redesign. The specific
 question is whether checking retrieved instruction-like content only after
 `answer_question` has called the model satisfies the intended safety policy.
 The post-answer check can replace the returned answer with a refusal, but it
