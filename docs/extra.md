@@ -484,7 +484,7 @@ repository evidence, not a claim about private-grader performance.
 |---|---|---|---|---|
 | **P1** | Audit the held-out answers claim by claim against the retrieved passages. | The [RAG guidance](../data/corpus/rag-basics.md) says to inspect whether the needed passage reached the prompt and separate retrieval from generation failure. The held-out artifact preserves both answers and passages. | Record supported claims, omissions, and overstatements for each answer; no model judge is authoritative. | Complete below. |
 | **P2** | Compare baseline and item-detail on a fresh, balanced, independently reviewed 8–20-case set. | [Evaluation guidance](../data/corpus/evaluation-basics.md) recommends a fixed labeled set, unhappy paths, and changing one thing at a time. | Same questions/settings in both conditions; review completeness, grounding, citations, refusal, adversarial behavior, and regressions. | Complete; findings below. |
-| **P3** | Run the complete public practice grader as a paired baseline/item-detail regression check before any prompt-adoption decision. | It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment. | Preserve both conditions and inspect critical safety/refusal, citations, and phrase-based results. | Ready to run. |
+| **P3** | Run the complete public practice grader as a paired baseline/item-detail regression check before any prompt-adoption decision. | It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment. | Preserve both conditions and inspect critical safety/refusal, citations, and phrase-based results. | Complete; findings below. |
 | **P4** | Defer retrieval redesign, further top-k tuning, and runtime multi-agent/subagent changes unless measured evidence points there. | The P2 run retrieved the expected source on supported questions. [Agent-loop guidance](../data/corpus/agent-loops.md) recommends the least autonomy that works because each step up adds latency, cost, and failure modes. | Reopen only when a repeatable failure pattern calls for the added complexity. | Deferred. |
 
 ### P1: source audit of the held-out comparison
@@ -580,6 +580,49 @@ scores together with the critical gate, provider failures, and case-level
 dimensions. The mechanical `claim_support` result remains phrase matching;
 P3 is a public regression check, not proof of semantic grounding or private
 grader eligibility.
+
+#### P3 paired comparison results
+
+The completed run is preserved in
+[`public_prompts_20261019T164708129715Z.json`](../runs/public-prompt-comparison/public_prompts_20261019T164708129715Z.json).
+It ran from 16:47:08Z to 17:03:43Z (**16m34.9s**) on
+`qwen2.5:7b-instruct-baseline`, with k=4 and requested temperature 0, top-p
+0.1, and seed 42. Both conditions completed with zero provider failures and
+eight recorded model calls each. The artifact records the requested settings,
+answers, retrieved passages, traces, timings, and source hashes.
+
+| Condition | Public score | Grounded | Adversarial | Refusal | Critical gate | Provider failures |
+|---|---:|---:|---:|---:|---|---:|
+| Baseline | 5/10 (50%) | 1/6 | 1/1 | 3/3 | **Fail (4/5)** | 0 |
+| Item-detail | 6/10 (60%) | 2/6 | 1/1 | 3/3 | **Pass (5/5)** | 0 |
+
+The score increase comes from `fa-05`: baseline failed the mechanical
+`claim_support` check while item-detail passed. On source review, baseline
+described four of the five documented defenses but omitted testing with an
+adversarial document; item-detail named all five. Both conditions passed the
+adversarial `fa-07` case and all three unsupported/refusal cases. The change is
+promising for defense coverage, but this is one run on the public set.
+
+There are also grounding/completeness cautions. Both conditions failed
+`claim_support` for `fa-01`, `fa-02`, `fa-03`, and `fa-06`; those are
+normalized phrase-match outcomes, not semantic verdicts. In `fa-03`, both
+answers omit the timeout/wall-clock condition. The item-detail answer further
+groups budget exhaustion with the other stop conditions and says the loop
+typically returns a refusal, while [Agent Loops](../data/corpus/agent-loops.md)
+specifically ties that defined refusal state to budget exhaustion and separately
+lists repeated identical calls as a loop-detection guard. This repeats the
+distinction already noted in the P1 audit. In `fa-01`, item-detail adds that
+paragraph-aware chunking enhances relevance and quality; [RAG Basics](../data/corpus/rag-basics.md)
+supports preferring paragraph boundaries over mid-sentence cuts, but does not
+claim they guarantee those broader outcomes.
+
+**Decision:** Keep the baseline as the default for now. Item-detail improved
+the public score by one case and changed the critical gate to pass, but the
+result is a single public-set run, and its extra explanation can still
+overgeneralize source claims. Do not treat this result as private-grader
+evidence or as proof of semantic grounding. A prompt-adoption decision should
+wait for another independently authored, source-reviewed comparison that
+checks both completeness and unsupported additions.
 
 Use `uv run python scripts/compare_topk.py` to repeat the comparison on the same
 public set. The artifacts preserve per-case answers, grader dimensions, traces,
