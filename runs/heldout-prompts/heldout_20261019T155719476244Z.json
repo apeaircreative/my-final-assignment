@@ -1,0 +1,805 @@
+{
+  "schema": "my-final-assignment.heldout-prompt-comparison.v1",
+  "started_at": "2026-10-19T15:57:19.476244Z",
+  "finished_at": "2026-10-19T16:11:47.273864Z",
+  "git_commit": "d5187d4be026642d70cde6edf76b878f501e55c3",
+  "provider": "ollama",
+  "model": "qwen2.5:7b-instruct-baseline",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "top_k": 4,
+  "sampling_options_requested": {
+    "temperature": 0.0,
+    "top_p": 0.1,
+    "seed": 42
+  },
+  "timeout_s_per_call": 120.0,
+  "case_set": {
+    "id": "my-final-assignment.heldout-review-set.v1",
+    "sha256": "bd20097a501017eb17192479eacca41315a46339ae52f82652779c3bbbe920c1",
+    "case_count": 6
+  },
+  "item_detail_instruction": "When a question asks for multiple supported items, briefly explain each item using its distinguishing detail from the context; do not return only a list of item names.",
+  "source_sha256": {
+    "agent.py": "985ffc23ce6bc8d9e9ef849abf00fed2672bb4189bdc708f75e16c815bc1e84d",
+    "safety.py": "4bf09398c3ae77b31cc52dbdf44119edefbde399d8106f54a6bec07c585d5d4f",
+    "Modelfile": "30210962ea9673c4325aef3f225c7c6740859ffbc8b088812c802349f2c4d865",
+    "heldout_cases": "bd20097a501017eb17192479eacca41315a46339ae52f82652779c3bbbe920c1",
+    "grader.py": "ba1a544d54877e0b0558726965e08528ab08de2cf50552dd493c956af66d8906",
+    "compare_heldout_prompts.py": "7a95320b27a7db3547dd27425555adef5d021c76e00ecdc0a45d761fd836f1c8"
+  },
+  "evaluation_note": "No public practice grader score is computed. Review each answer against the source-anchored checklist and retrieved evidence; review_reference is metadata and is never sent to the model.",
+  "results": [
+    {
+      "condition": "baseline",
+      "case_id": "loop-duplicate-call",
+      "question_sha256": "3797b2629b97d5e4ccb656ec9dfea66a30669400f1536ad24e807dba694e3012",
+      "review_reference": {
+        "source_ids": [
+          "agent-loops"
+        ],
+        "key_points": [
+          "Detect the repeated tool call with identical arguments and stop the loop.",
+          "Use a maximum tool-call, token, or wall-clock budget.",
+          "When a budget is exhausted, stop in a defined state rather than silently truncating."
+        ]
+      },
+      "answer": {
+        "text": "An agent should handle a repeated tool call with the same arguments by implementing a loop-detection guard, which typically results in a refusal with an explanation. Additionally, the loop should be kept bounded by setting a maximum number of tool calls, a token ceiling, or a wall-clock timeout as stopping conditions from day one.",
+        "citations": [
+          "agent-loops"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "agent-loops",
+          "position": 2,
+          "score": 9.293374,
+          "text": "There is a spectrum: a deterministic chain (no decisions), a tool-using loop (the\nmodel picks tools), a reflection loop (the model critiques its own draft), and\nmulti-agent systems (models delegate to models). Each step up adds latency, cost,\nand failure modes. The professional habit is to start at the bottom of the\nspectrum and move up only when a measured failure justifies it. A workflow that\ncan be a fixed pipeline should be a fixed pipeline.\n\n## Refusal is a first-class outcome\n\nA loop that cannot refuse will fabricate. When retrieval returns nothing relevant,\nthe correct behavior is to say so \u2014 before spending a model call \u2014 and flag the\nanswer for human review. Design the refusal path first; it is the path every other\nsafeguard falls back to."
+        },
+        {
+          "doc_id": "agent-loops",
+          "position": 0,
+          "score": 8.274804,
+          "text": "# Agent Loops\n\nAn agent is a loop: the model observes some state, decides on an action, the\napplication executes that action, and the result feeds the next observation. What\nseparates a reliable agent from an expensive random walk is not the model \u2014 it is\nthe engineering of the loop around it.\n\n## The anatomy of one iteration\n\nEach pass through the loop has four parts. **Perceive**: assemble the context the\nmodel will see \u2014 the question, retrieved documents, previous tool results.\n**Decide**: the model chooses to answer directly or to call a tool. **Act**: the\napplication validates the chosen tool's arguments and executes it. **Observe**: the\ntool result is appended to the context. The application owns three of these four\nsteps; only the decision belongs to the model."
+        },
+        {
+          "doc_id": "agent-loops",
+          "position": 1,
+          "score": 7.107035,
+          "text": "## Budgets and stopping conditions\n\nAn unbounded loop is a bug, not a feature. Every production loop carries a budget:\na maximum number of tool calls, a token ceiling, or a wall-clock timeout. When the\nbudget is exhausted, the loop must stop in a defined state \u2014 typically a refusal\nwith an explanation \u2014 rather than truncating silently. Stopping conditions worth\nimplementing from day one: the model produced a final answer, the budget ran out,\na tool failed unrecoverably, or the same tool was called with the same arguments\ntwice (a loop-detection guard).\n\n## Choose the least autonomy that works"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 3,
+          "score": 7.107035,
+          "text": "A trace is the ordered record of what the system actually did: what was\nretrieved, which tools were called with which arguments, what the model\nreturned. When a case fails, the trace answers the diagnostic question \u2014 was it\nretrieval, tool selection, instruction-following, or formatting? \u2014 in minutes.\nClassify each failure into one of those buckets, fix the biggest bucket first,\nand add a regression case so the same failure cannot return unnoticed.\n\n## The loop\n\nBaseline, change one thing, rerun, compare. Never change two things between\nmeasurements, and never report an improvement without also reporting what got\nworse. An honest evaluation report includes the regression it caused."
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('agent-loops', 2), ('agent-loops', 0), ('agent-loops', 1), ('evaluation-basics', 3)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 439 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['agent-loops']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 106.154
+    },
+    {
+      "condition": "baseline",
+      "case_id": "rag-failure-diagnosis",
+      "question_sha256": "c79b1d1fbc1fad5aff20252be2359fd9666a38cae4110cd19c509e6a927ce31f",
+      "review_reference": {
+        "source_ids": [
+          "rag-basics"
+        ],
+        "key_points": [
+          "First check whether the answer-bearing passage reached the prompt.",
+          "If retrieval missed it, investigate chunking, the index, or the query.",
+          "If the passage was present, investigate generation, instructions, formatting, or context use."
+        ]
+      },
+      "answer": {
+        "text": "The first diagnostic question is: did the right passage reach the prompt? If the right passage was present and the answer still went wrong, the failure is in generation: instructions, formatting, or the model ignoring context. If the needed passage was not in the prompt, fix chunking, the index, or the query instead.",
+        "citations": [
+          "rag-basics"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "rag-basics",
+          "position": 2,
+          "score": 12.572169,
+          "text": "When a RAG system answers wrongly, the first diagnostic question is: did the\nright passage reach the prompt? If retrieval missed it, no amount of prompt\nengineering will fix the answer \u2014 fix chunking, the index, or the query instead.\nIf the right passage was present and the answer still went wrong, the failure is\nin generation: instructions, formatting, or the model ignoring context. Keeping\nretrieved chunks inspectable (log them, show them) is what makes this diagnosis a\ntwo-minute check instead of a guessing game.\n\n## Citations keep the system honest"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 0,
+          "score": 4.633341,
+          "text": "# Evaluation Basics\n\n\"It seemed to work when I tried it\" is not evidence. Evaluation replaces\nanecdotes with a repeatable measurement: a fixed set of cases, a defined pass\ncondition, and a command anyone can run. For LLM applications this is the single\nhighest-leverage engineering habit, because model behavior changes under your\nfeet \u2014 a new model version, a reworded prompt, a different retrieval setting \u2014\nand only a rerunnable measurement tells you whether things got better or worse.\n\n## The golden set"
+        },
+        {
+          "doc_id": "prompt-injection",
+          "position": 1,
+          "score": 4.306519,
+          "text": "Any channel that feeds text into the prompt is an injection surface. For a RAG\nassistant that means the corpus itself: a document edited to include\ninstructions will have those instructions placed, verbatim, into the model's\ncontext at answer time. For an API-using agent it means specs and docs: a\nmalicious OpenAPI description can try to redirect calls or exfiltrate\ncredentials. For a coding assistant it means the repository: comments, commit\nmessages, and README files are all model-visible input.\n\n## Defenses that actually help"
+        },
+        {
+          "doc_id": "rag-basics",
+          "position": 0,
+          "score": 4.306519,
+          "text": "# RAG Basics\n\nRetrieval-augmented generation (RAG) grounds a model's answer in documents you\ncontrol. Instead of hoping the model memorized the right facts, the application\nretrieves relevant passages at question time and places them in the prompt. The\nmodel's job shrinks from \"know everything\" to \"synthesize from what you were\nshown\" \u2014 a job it is much better at.\n\n## The pipeline"
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('rag-basics', 2), ('evaluation-basics', 0), ('prompt-injection', 1), ('rag-basics', 0)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 409 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['rag-basics']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 58.515
+    },
+    {
+      "condition": "baseline",
+      "case_id": "mcp-boundary",
+      "question_sha256": "b468210cc4f8d0f2582f58714637426f08188c2371e9361ad10efe1734e99137",
+      "review_reference": {
+        "source_ids": [
+          "mcp-overview"
+        ],
+        "key_points": [
+          "A tool is a callable capability that executes.",
+          "A skill packages instructions for a workflow but does not itself execute.",
+          "An MCP server exposes tools, resources, and prompts through a protocol boundary.",
+          "Treat server connection as a security boundary; prefer read-only access and protect credentials."
+        ]
+      },
+      "answer": {
+        "text": "A **tool** is a callable capability with a narrow contract \u2014 it executes. A **skill** is packaged instructions \u2014 a folder of guidance the model loads to perform a workflow well; it does not execute anything by itself. An **MCP server** is a distribution boundary for tools and resources \u2014 it makes capabilities available across applications. Before connecting an MCP server, practical rules include: prefer read-only servers while learning; never place credentials in client configuration files that get committed; treat everything a server returns as untrusted data, not instructions; and use recorded or offline modes when they exist, so a misbehaving prompt cannot cause a real side effect. A server that can spend money or mutate production state deserves the same review as giving a new contractor production access.",
+        "citations": [
+          "mcp-overview"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "mcp-overview",
+          "position": 2,
+          "score": 7.938828,
+          "text": "These three are commonly confused. A **tool** is a callable capability with a\nnarrow contract \u2014 it executes. A **skill** is packaged instructions \u2014 a folder\nof guidance the model loads to perform a workflow well; it does not execute\nanything by itself. An **MCP server** is a distribution boundary for tools and\nresources \u2014 it makes capabilities available across applications. A well-built\nagent system often uses all three: an MCP server provides the tools, and a skill\nteaches the model when and how to use them.\n\n## Trust and safety at the boundary"
+        },
+        {
+          "doc_id": "mcp-overview",
+          "position": 0,
+          "score": 7.286503,
+          "text": "# MCP Overview\n\nThe Model Context Protocol (MCP) is an open standard for connecting AI\napplications to external capabilities. Where a tool is a function an agent can\ncall inside one application, an MCP server packages a set of tools, resources,\nand prompts behind a protocol boundary so that any MCP-capable client \u2014 Claude\nCode, Cursor, VS Code, a custom agent \u2014 can discover and use them without custom\nintegration code.\n\n## The moving parts"
+        },
+        {
+          "doc_id": "mcp-overview",
+          "position": 3,
+          "score": 6.158038,
+          "text": "Connecting an MCP server is granting capabilities, and the connection point is a\nsecurity boundary. Practical rules: prefer read-only servers while learning;\nnever place credentials in client configuration files that get committed;\ntreat everything a server returns as untrusted data, not instructions; and use\nrecorded or offline modes when they exist, so a misbehaving prompt cannot cause\na real side effect. A server that can spend money or mutate production state\ndeserves the same review as giving a new contractor production access.\n\n## Why it matters for this course"
+        },
+        {
+          "doc_id": "mcp-overview",
+          "position": 1,
+          "score": 4.760774,
+          "text": "An **MCP server** exposes capabilities: tools (functions with JSON-schema\nsignatures), resources (readable data), and prompts (reusable templates). An\n**MCP client** is the agent-side application that connects to servers, lists\ntheir capabilities, and routes the model's tool calls to the right server.\nTransport is pluggable \u2014 stdio for local servers, HTTP for hosted ones. The\nprotocol's value is the decoupling: the server's author does not need to know\nwhich assistant will call it.\n\n## Tools vs skills vs MCP servers"
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('mcp-overview', 2), ('mcp-overview', 0), ('mcp-overview', 3), ('mcp-overview', 1)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 914 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['mcp-overview']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 74.667
+    },
+    {
+      "condition": "baseline",
+      "case_id": "evaluation-design",
+      "question_sha256": "5fde0bc64390edf5a83fd8c23ac65ffca5ecd28cfec49398bc58981a8c52bd46",
+      "review_reference": {
+        "source_ids": [
+          "evaluation-basics"
+        ],
+        "key_points": [
+          "Use a fixed labeled set with expected properties rather than exact answers only.",
+          "Include unhappy paths such as unsupported and adversarial cases.",
+          "Prefer code checks for mechanical properties and inspect fuzzy judging.",
+          "Change one thing at a time and report regressions as well as improvements."
+        ]
+      },
+      "answer": {
+        "text": "A small but useful LLM evaluation set should contain eight to twenty cases, each pairing an input with an expected property, including unhappy paths such as 'not found' and adversarial inputs. When proposing a change, one should baseline the current system, change one thing, rerun the evaluation, and compare the results. An honest evaluation report should include any regression caused by the change.",
+        "citations": [
+          "evaluation-basics"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "evaluation-basics",
+          "position": 1,
+          "score": 8.969847,
+          "text": "Start with a small labeled set \u2014 eight to twenty cases is genuinely useful. Each\ncase pairs an input with an expected property, not necessarily an exact string:\n\"the answer cites document X\", \"the system refuses\", \"the JSON parses and\nconfidence is below 0.5\". Include the unhappy paths deliberately: at least one\nquestion whose correct answer is \"not found\", and one adversarial input. A\ngolden set without refusal cases grades a system on charisma, not reliability.\n\n## Code checks vs LLM-as-judge"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 0,
+          "score": 6.041735,
+          "text": "# Evaluation Basics\n\n\"It seemed to work when I tried it\" is not evidence. Evaluation replaces\nanecdotes with a repeatable measurement: a fixed set of cases, a defined pass\ncondition, and a command anyone can run. For LLM applications this is the single\nhighest-leverage engineering habit, because model behavior changes under your\nfeet \u2014 a new model version, a reworded prompt, a different retrieval setting \u2014\nand only a rerunnable measurement tells you whether things got better or worse.\n\n## The golden set"
+        },
+        {
+          "doc_id": "prompt-injection",
+          "position": 2,
+          "score": 5.791793,
+          "text": "No single defense is complete, but layers work. **Mark boundaries**: wrap\nretrieved content in delimiters and tell the model it is data to be quoted, not\nfollowed. **Constrain output**: a strict output schema means an injected\n\"instruction\" must survive validation to have any effect \u2014 most don't.\n**Bound capabilities**: an agent with read-only tools and a tool-call budget has\na small blast radius; injection into a system that cannot act is an incident,\nnot a breach. **Keep credentials out of the model's reach**: secrets injected at\nthe transport edge by the application can't be leaked by the model because the\nmodel never saw them. **Test it**: include an adversarial document in your\nevaluation set \u2014 one containing an instruction \u2014 and assert the agent quotes it\nrather than obeys it."
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 3,
+          "score": 4.685213,
+          "text": "A trace is the ordered record of what the system actually did: what was\nretrieved, which tools were called with which arguments, what the model\nreturned. When a case fails, the trace answers the diagnostic question \u2014 was it\nretrieval, tool selection, instruction-following, or formatting? \u2014 in minutes.\nClassify each failure into one of those buckets, fix the biggest bucket first,\nand add a regression case so the same failure cannot return unnoticed.\n\n## The loop\n\nBaseline, change one thing, rerun, compare. Never change two things between\nmeasurements, and never report an improvement without also reporting what got\nworse. An honest evaluation report includes the regression it caused."
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('evaluation-basics', 1), ('evaluation-basics', 0), ('prompt-injection', 2), ('evaluation-basics', 3)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 500 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['evaluation-basics']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 68.817
+    },
+    {
+      "condition": "baseline",
+      "case_id": "structured-retry",
+      "question_sha256": "c094cf8cb69611296b6f977062ded9a7422e2c3d1db7f5ba723782345c8ffa96",
+      "review_reference": {
+        "source_ids": [
+          "structured-outputs"
+        ],
+        "key_points": [
+          "The application parses and validates the model output strictly.",
+          "After the first parse failure, make one bounded corrective retry.",
+          "After a second failure, return a typed refusal with human review required."
+        ]
+      },
+      "answer": {
+        "text": "On failure, the application should retry once with a corrective instruction ('return only the JSON object, no prose'); on a second failure, it should return a typed refusal with `needs_human_review` set to true.",
+        "citations": [
+          "structured-outputs"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "structured-outputs",
+          "position": 2,
+          "score": 12.043989,
+          "text": "Parsing can fail even with a good prompt. A robust pattern is: attempt to parse;\non failure, retry once with a corrective instruction (\"return only the JSON\nobject, no prose\"); on a second failure, return a typed refusal with\n`needs_human_review` set to true. This keeps the failure visible and bounded\ninstead of letting malformed output leak into downstream code.\n\n## What to remember\n\nStructured output is not about making the model smarter. It is about making the\nboundary between probabilistic text and deterministic software explicit,\nvalidated, and testable. Every field you add to a schema is a claim you can now\nwrite a test against."
+        },
+        {
+          "doc_id": "structured-outputs",
+          "position": 1,
+          "score": 10.134447,
+          "text": "A schema like the following turns the answer into a checkable artifact:\n\n```json\n{\n  \"answer\": \"string\",\n  \"citations\": [\"doc-id\"],\n  \"confidence\": 0.0,\n  \"needs_human_review\": false\n}\n```\n\nTwo rules keep this honest. First, the application \u2014 not the model \u2014 is responsible\nfor parsing and validation. Treat the model's output as untrusted input: parse it\nstrictly, reject unknown fields, and fail loudly on malformed JSON. Second, design\nthe schema so that refusal is expressible. A model that cannot say \"I don't know\"\ninside the schema will be pushed toward inventing an answer that fits.\n\n## Handling failure"
+        },
+        {
+          "doc_id": "structured-outputs",
+          "position": 0,
+          "score": 5.08299,
+          "text": "# Structured Outputs\n\nA language model produces text. Software needs data. Structured outputs are the\ncontract between the two: instead of asking a model to \"answer the question,\" you\nask it to return a specific shape \u2014 usually JSON with named fields \u2014 and your\napplication validates that shape before using it.\n\n## Why free text is not enough\n\nAn unconstrained answer cannot be safely consumed by code. If the model answers a\nquestion about API authentication with three paragraphs of prose, a program that\nneeds the confidence level, the cited sources, or a yes/no flag has to guess where\nthose live. Guessing with string manipulation is brittle; a slightly different\nphrasing breaks the parser. The failure is silent, which is the worst kind.\n\n## The schema is a promise, parsing is your job"
+        },
+        {
+          "doc_id": "agent-loops",
+          "position": 2,
+          "score": 4.61744,
+          "text": "There is a spectrum: a deterministic chain (no decisions), a tool-using loop (the\nmodel picks tools), a reflection loop (the model critiques its own draft), and\nmulti-agent systems (models delegate to models). Each step up adds latency, cost,\nand failure modes. The professional habit is to start at the bottom of the\nspectrum and move up only when a measured failure justifies it. A workflow that\ncan be a fixed pipeline should be a fixed pipeline.\n\n## Refusal is a first-class outcome\n\nA loop that cannot refuse will fabricate. When retrieval returns nothing relevant,\nthe correct behavior is to say so \u2014 before spending a model call \u2014 and flag the\nanswer for human review. Design the refusal path first; it is the path every other\nsafeguard falls back to."
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('structured-outputs', 2), ('structured-outputs', 1), ('structured-outputs', 0), ('agent-loops', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 310 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['structured-outputs']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 69.235
+    },
+    {
+      "condition": "baseline",
+      "case_id": "rag-index-tradeoff",
+      "question_sha256": "2f6113762aabd33bb23dcc2f6afe48d674650d71bbe70d96bf4923ad3ee5f811",
+      "review_reference": {
+        "source_ids": [
+          "rag-basics"
+        ],
+        "key_points": [
+          "Lexical retrieval is deterministic, inexpensive, and easy to debug.",
+          "Embedding-based semantic search can improve recall for paraphrased questions.",
+          "Semantic search adds a dependency and a failure mode that is less directly inspectable."
+        ]
+      },
+      "answer": {
+        "text": "A lexical index (keyword overlap) is a perfectly respectable baseline and is deterministic, cheap, and debuggable. Embedding-based semantic search improves recall on paraphrased questions but adds a dependency and a failure mode you cannot inspect by eye.",
+        "citations": [
+          "rag-basics"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "rag-basics",
+          "position": 1,
+          "score": 24.11978,
+          "text": "A minimal RAG pipeline has four stages. **Chunking** splits documents into\npassages small enough to be individually relevant \u2014 respecting paragraph\nboundaries beats cutting at a fixed character count mid-sentence. **Indexing**\nprepares chunks for search; a lexical index (keyword overlap) is a perfectly\nrespectable baseline and is deterministic, cheap, and debuggable. Embedding-based\nsemantic search improves recall on paraphrased questions but adds a dependency\nand a failure mode you cannot inspect by eye. **Retrieval** selects the top-k\nchunks for a query. **Generation** answers using only the retrieved context, with\ncitations naming the source documents.\n\n## Retrieval failure vs generation failure"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 2,
+          "score": 2.525729,
+          "text": "Prefer code-based checks whenever the property is mechanical: did it cite the\nexpected source, did it parse, did it stay under the tool budget. They are fast,\nfree, and deterministic. LLM-as-judge \u2014 using a model to grade another model's\noutput \u2014 earns its place for genuinely fuzzy properties like tone or coherence,\nbut it inherits the judge's own biases and must itself be spot-checked against\nhuman labels. A common failure is an evaluator that passes everything; inspect\nyour evaluator's false positives before trusting its pass rate.\n\n## Traces turn failures into diagnoses"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 3,
+          "score": 2.525729,
+          "text": "A trace is the ordered record of what the system actually did: what was\nretrieved, which tools were called with which arguments, what the model\nreturned. When a case fails, the trace answers the diagnostic question \u2014 was it\nretrieval, tool selection, instruction-following, or formatting? \u2014 in minutes.\nClassify each failure into one of those buckets, fix the biggest bucket first,\nand add a regression case so the same failure cannot return unnoticed.\n\n## The loop\n\nBaseline, change one thing, rerun, compare. Never change two things between\nmeasurements, and never report an improvement without also reporting what got\nworse. An honest evaluation report includes the regression it caused."
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('rag-basics', 1), ('evaluation-basics', 2), ('evaluation-basics', 3)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 346 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['rag-basics']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 51.83
+    },
+    {
+      "condition": "item_detail_instruction",
+      "case_id": "loop-duplicate-call",
+      "question_sha256": "3797b2629b97d5e4ccb656ec9dfea66a30669400f1536ad24e807dba694e3012",
+      "review_reference": {
+        "source_ids": [
+          "agent-loops"
+        ],
+        "key_points": [
+          "Detect the repeated tool call with identical arguments and stop the loop.",
+          "Use a maximum tool-call, token, or wall-clock budget.",
+          "When a budget is exhausted, stop in a defined state rather than silently truncating."
+        ]
+      },
+      "answer": {
+        "text": "An agent should handle a repeated tool call with the same arguments by stopping the loop in a defined state, typically with a refusal and an explanation, rather than truncating silently. Other limits that should keep the loop bounded include a maximum number of tool calls, a token ceiling, or a wall-clock timeout. Each pass through the loop has four parts: Perceive, Decide, Act, and Observe, with the Act step involving the application validating the chosen tool's arguments and executing it. If the same tool is called with the same arguments twice, it triggers a loop-detection guard, which is a stopping condition worth implementing from day one.",
+        "citations": [
+          "agent-loops"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "agent-loops",
+          "position": 2,
+          "score": 9.293374,
+          "text": "There is a spectrum: a deterministic chain (no decisions), a tool-using loop (the\nmodel picks tools), a reflection loop (the model critiques its own draft), and\nmulti-agent systems (models delegate to models). Each step up adds latency, cost,\nand failure modes. The professional habit is to start at the bottom of the\nspectrum and move up only when a measured failure justifies it. A workflow that\ncan be a fixed pipeline should be a fixed pipeline.\n\n## Refusal is a first-class outcome\n\nA loop that cannot refuse will fabricate. When retrieval returns nothing relevant,\nthe correct behavior is to say so \u2014 before spending a model call \u2014 and flag the\nanswer for human review. Design the refusal path first; it is the path every other\nsafeguard falls back to."
+        },
+        {
+          "doc_id": "agent-loops",
+          "position": 0,
+          "score": 8.274804,
+          "text": "# Agent Loops\n\nAn agent is a loop: the model observes some state, decides on an action, the\napplication executes that action, and the result feeds the next observation. What\nseparates a reliable agent from an expensive random walk is not the model \u2014 it is\nthe engineering of the loop around it.\n\n## The anatomy of one iteration\n\nEach pass through the loop has four parts. **Perceive**: assemble the context the\nmodel will see \u2014 the question, retrieved documents, previous tool results.\n**Decide**: the model chooses to answer directly or to call a tool. **Act**: the\napplication validates the chosen tool's arguments and executes it. **Observe**: the\ntool result is appended to the context. The application owns three of these four\nsteps; only the decision belongs to the model."
+        },
+        {
+          "doc_id": "agent-loops",
+          "position": 1,
+          "score": 7.107035,
+          "text": "## Budgets and stopping conditions\n\nAn unbounded loop is a bug, not a feature. Every production loop carries a budget:\na maximum number of tool calls, a token ceiling, or a wall-clock timeout. When the\nbudget is exhausted, the loop must stop in a defined state \u2014 typically a refusal\nwith an explanation \u2014 rather than truncating silently. Stopping conditions worth\nimplementing from day one: the model produced a final answer, the budget ran out,\na tool failed unrecoverably, or the same tool was called with the same arguments\ntwice (a loop-detection guard).\n\n## Choose the least autonomy that works"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 3,
+          "score": 7.107035,
+          "text": "A trace is the ordered record of what the system actually did: what was\nretrieved, which tools were called with which arguments, what the model\nreturned. When a case fails, the trace answers the diagnostic question \u2014 was it\nretrieval, tool selection, instruction-following, or formatting? \u2014 in minutes.\nClassify each failure into one of those buckets, fix the biggest bucket first,\nand add a regression case so the same failure cannot return unnoticed.\n\n## The loop\n\nBaseline, change one thing, rerun, compare. Never change two things between\nmeasurements, and never report an improvement without also reporting what got\nworse. An honest evaluation report includes the regression it caused."
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('agent-loops', 2), ('agent-loops', 0), ('agent-loops', 1), ('evaluation-basics', 3)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 759 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['agent-loops']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 88.655
+    },
+    {
+      "condition": "item_detail_instruction",
+      "case_id": "rag-failure-diagnosis",
+      "question_sha256": "c79b1d1fbc1fad5aff20252be2359fd9666a38cae4110cd19c509e6a927ce31f",
+      "review_reference": {
+        "source_ids": [
+          "rag-basics"
+        ],
+        "key_points": [
+          "First check whether the answer-bearing passage reached the prompt.",
+          "If retrieval missed it, investigate chunking, the index, or the query.",
+          "If the passage was present, investigate generation, instructions, formatting, or context use."
+        ]
+      },
+      "answer": {
+        "text": "When a RAG answer is wrong, the first diagnostic step is to check if the right passage reached the prompt. If the correct passage was not retrieved, the remedy involves fixing chunking, the index, or the query. If the correct passage was present but the answer was still incorrect, the issue lies in the generation process, such as instructions, formatting, or the model ignoring context.",
+        "citations": [
+          "rag-basics"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "rag-basics",
+          "position": 2,
+          "score": 12.572169,
+          "text": "When a RAG system answers wrongly, the first diagnostic question is: did the\nright passage reach the prompt? If retrieval missed it, no amount of prompt\nengineering will fix the answer \u2014 fix chunking, the index, or the query instead.\nIf the right passage was present and the answer still went wrong, the failure is\nin generation: instructions, formatting, or the model ignoring context. Keeping\nretrieved chunks inspectable (log them, show them) is what makes this diagnosis a\ntwo-minute check instead of a guessing game.\n\n## Citations keep the system honest"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 0,
+          "score": 4.633341,
+          "text": "# Evaluation Basics\n\n\"It seemed to work when I tried it\" is not evidence. Evaluation replaces\nanecdotes with a repeatable measurement: a fixed set of cases, a defined pass\ncondition, and a command anyone can run. For LLM applications this is the single\nhighest-leverage engineering habit, because model behavior changes under your\nfeet \u2014 a new model version, a reworded prompt, a different retrieval setting \u2014\nand only a rerunnable measurement tells you whether things got better or worse.\n\n## The golden set"
+        },
+        {
+          "doc_id": "prompt-injection",
+          "position": 1,
+          "score": 4.306519,
+          "text": "Any channel that feeds text into the prompt is an injection surface. For a RAG\nassistant that means the corpus itself: a document edited to include\ninstructions will have those instructions placed, verbatim, into the model's\ncontext at answer time. For an API-using agent it means specs and docs: a\nmalicious OpenAPI description can try to redirect calls or exfiltrate\ncredentials. For a coding assistant it means the repository: comments, commit\nmessages, and README files are all model-visible input.\n\n## Defenses that actually help"
+        },
+        {
+          "doc_id": "rag-basics",
+          "position": 0,
+          "score": 4.306519,
+          "text": "# RAG Basics\n\nRetrieval-augmented generation (RAG) grounds a model's answer in documents you\ncontrol. Instead of hoping the model memorized the right facts, the application\nretrieves relevant passages at question time and places them in the prompt. The\nmodel's job shrinks from \"know everything\" to \"synthesize from what you were\nshown\" \u2014 a job it is much better at.\n\n## The pipeline"
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('rag-basics', 2), ('evaluation-basics', 0), ('prompt-injection', 1), ('rag-basics', 0)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 479 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['rag-basics']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 61.298
+    },
+    {
+      "condition": "item_detail_instruction",
+      "case_id": "mcp-boundary",
+      "question_sha256": "b468210cc4f8d0f2582f58714637426f08188c2371e9361ad10efe1734e99137",
+      "review_reference": {
+        "source_ids": [
+          "mcp-overview"
+        ],
+        "key_points": [
+          "A tool is a callable capability that executes.",
+          "A skill packages instructions for a workflow but does not itself execute.",
+          "An MCP server exposes tools, resources, and prompts through a protocol boundary.",
+          "Treat server connection as a security boundary; prefer read-only access and protect credentials."
+        ]
+      },
+      "answer": {
+        "text": "A **tool** is a callable capability with a narrow contract that executes, a **skill** is packaged instructions that teach the model when and how to use tools, and an **MCP server** is a distribution boundary that packages tools, resources, and prompts behind a protocol boundary, making them available to any MCP-capable client. Before connecting an **MCP server**, consider the security boundary it represents, prefer read-only servers while learning, never place credentials in client configuration files that get committed, treat everything a server returns as untrusted data, and use recorded or offline modes when available to prevent misbehaving prompts from causing real side effects.",
+        "citations": [
+          "mcp-overview"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "mcp-overview",
+          "position": 2,
+          "score": 7.938828,
+          "text": "These three are commonly confused. A **tool** is a callable capability with a\nnarrow contract \u2014 it executes. A **skill** is packaged instructions \u2014 a folder\nof guidance the model loads to perform a workflow well; it does not execute\nanything by itself. An **MCP server** is a distribution boundary for tools and\nresources \u2014 it makes capabilities available across applications. A well-built\nagent system often uses all three: an MCP server provides the tools, and a skill\nteaches the model when and how to use them.\n\n## Trust and safety at the boundary"
+        },
+        {
+          "doc_id": "mcp-overview",
+          "position": 0,
+          "score": 7.286503,
+          "text": "# MCP Overview\n\nThe Model Context Protocol (MCP) is an open standard for connecting AI\napplications to external capabilities. Where a tool is a function an agent can\ncall inside one application, an MCP server packages a set of tools, resources,\nand prompts behind a protocol boundary so that any MCP-capable client \u2014 Claude\nCode, Cursor, VS Code, a custom agent \u2014 can discover and use them without custom\nintegration code.\n\n## The moving parts"
+        },
+        {
+          "doc_id": "mcp-overview",
+          "position": 3,
+          "score": 6.158038,
+          "text": "Connecting an MCP server is granting capabilities, and the connection point is a\nsecurity boundary. Practical rules: prefer read-only servers while learning;\nnever place credentials in client configuration files that get committed;\ntreat everything a server returns as untrusted data, not instructions; and use\nrecorded or offline modes when they exist, so a misbehaving prompt cannot cause\na real side effect. A server that can spend money or mutate production state\ndeserves the same review as giving a new contractor production access.\n\n## Why it matters for this course"
+        },
+        {
+          "doc_id": "mcp-overview",
+          "position": 1,
+          "score": 4.760774,
+          "text": "An **MCP server** exposes capabilities: tools (functions with JSON-schema\nsignatures), resources (readable data), and prompts (reusable templates). An\n**MCP client** is the agent-side application that connects to servers, lists\ntheir capabilities, and routes the model's tool calls to the right server.\nTransport is pluggable \u2014 stdio for local servers, HTTP for hosted ones. The\nprotocol's value is the decoupling: the server's author does not need to know\nwhich assistant will call it.\n\n## Tools vs skills vs MCP servers"
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('mcp-overview', 2), ('mcp-overview', 0), ('mcp-overview', 3), ('mcp-overview', 1)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 784 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['mcp-overview']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 79.826
+    },
+    {
+      "condition": "item_detail_instruction",
+      "case_id": "evaluation-design",
+      "question_sha256": "5fde0bc64390edf5a83fd8c23ac65ffca5ecd28cfec49398bc58981a8c52bd46",
+      "review_reference": {
+        "source_ids": [
+          "evaluation-basics"
+        ],
+        "key_points": [
+          "Use a fixed labeled set with expected properties rather than exact answers only.",
+          "Include unhappy paths such as unsupported and adversarial cases.",
+          "Prefer code checks for mechanical properties and inspect fuzzy judging.",
+          "Change one thing at a time and report regressions as well as improvements."
+        ]
+      },
+      "answer": {
+        "text": "A small but useful LLM evaluation set should contain eight to twenty cases, each pairing an input with an expected property, such as 'the answer cites document X', 'the system refuses', or 'the JSON parses and confidence is below 0.5'. It should deliberately include unhappy paths, such as at least one question whose correct answer is 'not found', and one adversarial input. When proposing a change, one should baseline the current system, change one thing, rerun the evaluation, and compare the results. Never change two things between measurements, and always report any regression caused by the change.",
+        "citations": [
+          "evaluation-basics"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "evaluation-basics",
+          "position": 1,
+          "score": 8.969847,
+          "text": "Start with a small labeled set \u2014 eight to twenty cases is genuinely useful. Each\ncase pairs an input with an expected property, not necessarily an exact string:\n\"the answer cites document X\", \"the system refuses\", \"the JSON parses and\nconfidence is below 0.5\". Include the unhappy paths deliberately: at least one\nquestion whose correct answer is \"not found\", and one adversarial input. A\ngolden set without refusal cases grades a system on charisma, not reliability.\n\n## Code checks vs LLM-as-judge"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 0,
+          "score": 6.041735,
+          "text": "# Evaluation Basics\n\n\"It seemed to work when I tried it\" is not evidence. Evaluation replaces\nanecdotes with a repeatable measurement: a fixed set of cases, a defined pass\ncondition, and a command anyone can run. For LLM applications this is the single\nhighest-leverage engineering habit, because model behavior changes under your\nfeet \u2014 a new model version, a reworded prompt, a different retrieval setting \u2014\nand only a rerunnable measurement tells you whether things got better or worse.\n\n## The golden set"
+        },
+        {
+          "doc_id": "prompt-injection",
+          "position": 2,
+          "score": 5.791793,
+          "text": "No single defense is complete, but layers work. **Mark boundaries**: wrap\nretrieved content in delimiters and tell the model it is data to be quoted, not\nfollowed. **Constrain output**: a strict output schema means an injected\n\"instruction\" must survive validation to have any effect \u2014 most don't.\n**Bound capabilities**: an agent with read-only tools and a tool-call budget has\na small blast radius; injection into a system that cannot act is an incident,\nnot a breach. **Keep credentials out of the model's reach**: secrets injected at\nthe transport edge by the application can't be leaked by the model because the\nmodel never saw them. **Test it**: include an adversarial document in your\nevaluation set \u2014 one containing an instruction \u2014 and assert the agent quotes it\nrather than obeys it."
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 3,
+          "score": 4.685213,
+          "text": "A trace is the ordered record of what the system actually did: what was\nretrieved, which tools were called with which arguments, what the model\nreturned. When a case fails, the trace answers the diagnostic question \u2014 was it\nretrieval, tool selection, instruction-following, or formatting? \u2014 in minutes.\nClassify each failure into one of those buckets, fix the biggest bucket first,\nand add a regression case so the same failure cannot return unnoticed.\n\n## The loop\n\nBaseline, change one thing, rerun, compare. Never change two things between\nmeasurements, and never report an improvement without also reporting what got\nworse. An honest evaluation report includes the regression it caused."
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('evaluation-basics', 1), ('evaluation-basics', 0), ('prompt-injection', 2), ('evaluation-basics', 3)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 704 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['evaluation-basics']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 79.717
+    },
+    {
+      "condition": "item_detail_instruction",
+      "case_id": "structured-retry",
+      "question_sha256": "c094cf8cb69611296b6f977062ded9a7422e2c3d1db7f5ba723782345c8ffa96",
+      "review_reference": {
+        "source_ids": [
+          "structured-outputs"
+        ],
+        "key_points": [
+          "The application parses and validates the model output strictly.",
+          "After the first parse failure, make one bounded corrective retry.",
+          "After a second failure, return a typed refusal with human review required."
+        ]
+      },
+      "answer": {
+        "text": "The application should parse the model's output strictly, rejecting unknown fields and failing loudly on malformed JSON. If parsing fails, it should retry once with a corrective instruction ('return only the JSON object, no prose'). On a second failure, the application should return a typed refusal with `needs_human_review` set to true, making the failure visible and bounded.",
+        "citations": [
+          "structured-outputs"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "structured-outputs",
+          "position": 2,
+          "score": 12.043989,
+          "text": "Parsing can fail even with a good prompt. A robust pattern is: attempt to parse;\non failure, retry once with a corrective instruction (\"return only the JSON\nobject, no prose\"); on a second failure, return a typed refusal with\n`needs_human_review` set to true. This keeps the failure visible and bounded\ninstead of letting malformed output leak into downstream code.\n\n## What to remember\n\nStructured output is not about making the model smarter. It is about making the\nboundary between probabilistic text and deterministic software explicit,\nvalidated, and testable. Every field you add to a schema is a claim you can now\nwrite a test against."
+        },
+        {
+          "doc_id": "structured-outputs",
+          "position": 1,
+          "score": 10.134447,
+          "text": "A schema like the following turns the answer into a checkable artifact:\n\n```json\n{\n  \"answer\": \"string\",\n  \"citations\": [\"doc-id\"],\n  \"confidence\": 0.0,\n  \"needs_human_review\": false\n}\n```\n\nTwo rules keep this honest. First, the application \u2014 not the model \u2014 is responsible\nfor parsing and validation. Treat the model's output as untrusted input: parse it\nstrictly, reject unknown fields, and fail loudly on malformed JSON. Second, design\nthe schema so that refusal is expressible. A model that cannot say \"I don't know\"\ninside the schema will be pushed toward inventing an answer that fits.\n\n## Handling failure"
+        },
+        {
+          "doc_id": "structured-outputs",
+          "position": 0,
+          "score": 5.08299,
+          "text": "# Structured Outputs\n\nA language model produces text. Software needs data. Structured outputs are the\ncontract between the two: instead of asking a model to \"answer the question,\" you\nask it to return a specific shape \u2014 usually JSON with named fields \u2014 and your\napplication validates that shape before using it.\n\n## Why free text is not enough\n\nAn unconstrained answer cannot be safely consumed by code. If the model answers a\nquestion about API authentication with three paragraphs of prose, a program that\nneeds the confidence level, the cited sources, or a yes/no flag has to guess where\nthose live. Guessing with string manipulation is brittle; a slightly different\nphrasing breaks the parser. The failure is silent, which is the worst kind.\n\n## The schema is a promise, parsing is your job"
+        },
+        {
+          "doc_id": "agent-loops",
+          "position": 2,
+          "score": 4.61744,
+          "text": "There is a spectrum: a deterministic chain (no decisions), a tool-using loop (the\nmodel picks tools), a reflection loop (the model critiques its own draft), and\nmulti-agent systems (models delegate to models). Each step up adds latency, cost,\nand failure modes. The professional habit is to start at the bottom of the\nspectrum and move up only when a measured failure justifies it. A workflow that\ncan be a fixed pipeline should be a fixed pipeline.\n\n## Refusal is a first-class outcome\n\nA loop that cannot refuse will fabricate. When retrieval returns nothing relevant,\nthe correct behavior is to say so \u2014 before spending a model call \u2014 and flag the\nanswer for human review. Design the refusal path first; it is the path every other\nsafeguard falls back to."
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('structured-outputs', 2), ('structured-outputs', 1), ('structured-outputs', 0), ('agent-loops', 2)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 477 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['structured-outputs']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 75.477
+    },
+    {
+      "condition": "item_detail_instruction",
+      "case_id": "rag-index-tradeoff",
+      "question_sha256": "2f6113762aabd33bb23dcc2f6afe48d674650d71bbe70d96bf4923ad3ee5f811",
+      "review_reference": {
+        "source_ids": [
+          "rag-basics"
+        ],
+        "key_points": [
+          "Lexical retrieval is deterministic, inexpensive, and easy to debug.",
+          "Embedding-based semantic search can improve recall for paraphrased questions.",
+          "Semantic search adds a dependency and a failure mode that is less directly inspectable."
+        ]
+      },
+      "answer": {
+        "text": "Lexical indexing offers a baseline that is deterministic, cheap, and debuggable. It prepares chunks for search based on keyword overlap. Embedding-based semantic search trades off a dependency and a failure mode that cannot be inspected by eye for improved recall on paraphrased questions.",
+        "citations": [
+          "rag-basics"
+        ],
+        "confidence": 1.0,
+        "needs_human_review": false
+      },
+      "retrieved": [
+        {
+          "doc_id": "rag-basics",
+          "position": 1,
+          "score": 24.11978,
+          "text": "A minimal RAG pipeline has four stages. **Chunking** splits documents into\npassages small enough to be individually relevant \u2014 respecting paragraph\nboundaries beats cutting at a fixed character count mid-sentence. **Indexing**\nprepares chunks for search; a lexical index (keyword overlap) is a perfectly\nrespectable baseline and is deterministic, cheap, and debuggable. Embedding-based\nsemantic search improves recall on paraphrased questions but adds a dependency\nand a failure mode you cannot inspect by eye. **Retrieval** selects the top-k\nchunks for a query. **Generation** answers using only the retrieved context, with\ncitations naming the source documents.\n\n## Retrieval failure vs generation failure"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 2,
+          "score": 2.525729,
+          "text": "Prefer code-based checks whenever the property is mechanical: did it cite the\nexpected source, did it parse, did it stay under the tool budget. They are fast,\nfree, and deterministic. LLM-as-judge \u2014 using a model to grade another model's\noutput \u2014 earns its place for genuinely fuzzy properties like tone or coherence,\nbut it inherits the judge's own biases and must itself be spot-checked against\nhuman labels. A common failure is an evaluator that passes everything; inspect\nyour evaluator's false positives before trusting its pass rate.\n\n## Traces turn failures into diagnoses"
+        },
+        {
+          "doc_id": "evaluation-basics",
+          "position": 3,
+          "score": 2.525729,
+          "text": "A trace is the ordered record of what the system actually did: what was\nretrieved, which tools were called with which arguments, what the model\nreturned. When a case fails, the trace answers the diagnostic question \u2014 was it\nretrieval, tool selection, instruction-following, or formatting? \u2014 in minutes.\nClassify each failure into one of those buckets, fix the biggest bucket first,\nand add a regression case so the same failure cannot return unnoticed.\n\n## The loop\n\nBaseline, change one thing, rerun, compare. Never change two things between\nmeasurements, and never report an improvement without also reporting what got\nworse. An honest evaluation report includes the regression it caused."
+        }
+      ],
+      "trace": [
+        {
+          "kind": "retrieve",
+          "detail": "top_k=4 -> [('rag-basics', 1), ('evaluation-basics', 2), ('evaluation-basics', 3)]"
+        },
+        {
+          "kind": "llm_call",
+          "detail": "attempt 1: 380 chars"
+        },
+        {
+          "kind": "decision",
+          "detail": "answered with citations ['rag-basics']"
+        }
+      ],
+      "provider_failures": [],
+      "elapsed_s": 53.585
+    }
+  ]
+}

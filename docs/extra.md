@@ -447,6 +447,34 @@ establish generalization. Do not adopt the prompt based only on these six
 questions; if the result is promising, expand with independently authored,
 held-out cases and human-validated criteria before changing the default.
 
+The first comparison completed on 2026-10-19 from 15:57:19.476Z to
+16:11:47.274Z (about **14m27.8s**). Its preserved artifact is
+[`runs/heldout-prompts/heldout_20261019T155719476244Z.json`](../runs/heldout-prompts/heldout_20261019T155719476244Z.json).
+It contains six cases per condition, recorded temperature 0/top-p 0.1/seed 42,
+and zero provider failures. The baseline arm ran before the item-detail arm.
+All twelve answers cited the expected source document, and retrieval included
+that source for every case.
+
+This was a qualitative source review, not an automated pass-rate experiment.
+Across these six questions, both prompt conditions produced generally
+source-consistent answers. The item-detail condition more fully explained
+the action or tradeoff in several responses (notably structured-output
+validation/retry and MCP's tools/resources/prompts). One caution: the loop
+answer says repeating the same tool call "typically results in a refusal";
+the source says repeated identical calls trigger a loop-detection stopping
+condition, while refusal with explanation is described for budget exhaustion.
+That wording may conflate distinct stop conditions. The variant therefore
+shows a useful completeness tendency but also illustrates why each claim must
+be checked against the source rather than judging answer length as quality.
+
+The six questions and their review points are now visible in this repository
+and have informed this prompt decision. Treat this specific set as consumed
+exploratory data, not as an untouched holdout for further tuning. The evidence
+does not justify switching the default yet. A later adoption decision should
+use a newly authored, independently reviewed evaluation set and include
+checks for correctness, completeness, citation support, unsupported additions,
+and safety—not just answer length or public-grader phrase hits.
+
 Use `uv run python scripts/compare_topk.py` to repeat the comparison on the same
 public set. The artifacts preserve per-case answers, grader dimensions, traces,
 retrieved IDs/scores, timings, and source hashes without copying question text.
