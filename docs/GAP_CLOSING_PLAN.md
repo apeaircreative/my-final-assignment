@@ -102,7 +102,7 @@ Complete one task at a time.
 
 ### B1 — Supported-interface delegation
 
-Status: ready
+Status: passed
 
 Contract: Q1
 
@@ -146,6 +146,37 @@ Completion condition:
 
 Direct delegation is covered by a passing isolated test, or existing
 equivalent coverage is identified and documented.
+
+### Outcome
+
+Status: passed
+
+Implementation commit: `3a8ac9420769a5fb71abe5939e9acc552efa8e02`
+
+Revision checked during verification:
+`3a8ac9420769a5fb71abe5939e9acc552efa8e02` (same as the implementation
+commit).
+
+Commands and actual outcomes:
+
+- Focused test: `uv run pytest tests/test_contract.py::test_call_delegates_to_run_and_returns_its_answer` — 1 passed.
+- Full offline suite: `BOOTCAMP_PROVIDER=fake uv run pytest` — 24 passed.
+- Diff check: `git diff --check` — passed with no output.
+
+Changed files:
+
+- `tests/test_contract.py` (implementation commit).
+
+Evidence or limitation:
+
+`test_call_delegates_to_run_and_returns_its_answer` verifies unchanged
+question forwarding, exactly one call to that instance's `run()`, and return
+of the same `result.answer` object. Delegation coverage does not independently
+verify Q2–Q4 or timeout behavior.
+
+Reviewed: 2026-10-21.
+
+Commit: `3a8ac9420769a5fb71abe5939e9acc552efa8e02`.
 
 ### B2 — Missing-citation requirement
 

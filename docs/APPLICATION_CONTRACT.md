@@ -91,9 +91,14 @@ enforcing the accepted answer contract.
 
 ### Verification status
 
-Pending.
+Verified by `test_call_delegates_to_run_and_returns_its_answer` in
+`tests/test_contract.py` at revision
+`3a8ac9420769a5fb71abe5939e9acc552efa8e02`. The test verifies that
+`__call__()` forwards the question unchanged to that instance's `run()` exactly
+once and returns the same `result.answer` object.
 
-First check: direct delegation from `__call__()` to `run()`.
+This verifies Q1 delegation only; it does not independently verify Q2–Q4 or
+timeout behavior.
 
 ## Q2 — Citation requirement
 
