@@ -26,8 +26,10 @@ import threading
 
 import pytest
 from bootcamp_agent import agent as course_pipeline
+from bootcamp_agent.agent import AgentResult
 from bootcamp_agent.documents import Document
 from bootcamp_agent.llm import FakeLLM
+from bootcamp_agent.schema import ResearchAnswer
 from bootcamp_agent.tools import Tool
 
 import agent as application
@@ -53,6 +55,29 @@ def _reply(answer: str, citations: list[str], confidence: float = 0.9, review: b
 
 def _is_flagged_refusal(answer) -> bool:
     return answer.needs_human_review and answer.citations == () and answer.confidence <= 0.2
+
+def test_call_delegates_to_run_and_returns_its_answer(monkeypatch) -> None:
+    agent = YourAgent(client=FakeLLM())
+    answer = ResearchAnswer(
+        answer="A constructed answer .",
+        citations=("rag-basics",),
+        confidence=0.9,
+        needs_human_review=False,
+    )
+    result = AgentResult(answer=answer, trace=[])
+    received_questions = []
+
+    def recording_run(question: str) -> AgentResult:
+        received_questions.append(question)
+        return result
+    monkeypatch.setattr(agent, "run", recording_run)
+    question = "Forward this question unchanged."
+
+    returned = agent(question)
+
+    assert received_questions == [question]
+    assert returned is result.answer
+
 
 
 def test_prompt_extension_uses_real_line_breaks() -> None:
