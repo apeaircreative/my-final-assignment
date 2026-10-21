@@ -5,7 +5,6 @@ from collections.abc import Iterable
 
 from bootcamp_agent.retrieval import ScoredChunk
 
-
 INSTRUCTION_PHRASES = (
     "ignore previous instructions",
     "ignore prior instructions",

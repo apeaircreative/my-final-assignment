@@ -309,7 +309,10 @@ def test_review_observation_is_isolated_between_runs(review_sequence: tuple[bool
         if review:
             _assert_standard_refusal(result.answer)
         else:
-            assert result.answer.answer == "Chunking splits documents into passages at paragraph boundaries."
+            assert (
+                result.answer.answer
+                == "Chunking splits documents into passages at paragraph boundaries."
+            )
             assert result.answer.citations == ("rag-basics",)
             assert result.answer.confidence <= 0.2
             assert result.answer.needs_human_review is True

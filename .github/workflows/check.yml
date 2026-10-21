@@ -24,7 +24,8 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.11"
-      - run: uv sync
+      - run: uv sync --locked
+      - run: uv run ruff check .
       # The contract. Green on day one: the parts the starter lacks are xfail.
       # A red here is real: a test you had earned stopped passing, or an xfail
       # started passing and wants its marker removed.
@@ -45,7 +46,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.11"
-      - run: uv sync
+      - run: uv sync --locked
       - name: practice grader (fake model, no keys in CI)
         continue-on-error: true
         run: |

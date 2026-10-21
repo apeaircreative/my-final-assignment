@@ -25,8 +25,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from bootcamp_agent.agent import (
-    AnswerParseError,
     AgentResult,
+    AnswerParseError,
     TraceEvent,
     _refusal,
     answer_question,
