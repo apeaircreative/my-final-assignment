@@ -128,10 +128,24 @@ entailed by the retrieved passage.
 
 ### Verification status
 
-Pending.
+Verified at HEAD
+`e843309b20790e9f3a42f520a62bfb29e0220975`, with uncommitted implementation
+and test changes in `agent.py` and `tests/test_contract.py` present during
+verification.
 
-Tests must cover initially empty citations and citations emptied by
-sanitization.
+- `test_uncited_substantive_answer_returns_standard_refusal`: initially empty
+  citations produce the standard flagged refusal; passed in the focused Q2
+  run.
+- `test_all_citations_removed_returns_standard_refusal`: citation
+  sanitization removes the fabricated ID, preserves its trace event, and the
+  application returns the standard flagged refusal; passed in the focused Q2
+  run.
+- `test_citation_retrieval_never_returned_is_stripped_and_flagged`: existing
+  partial-sanitization behavior with a valid citation remaining; passed.
+- Full offline suite: `BOOTCAMP_PROVIDER=fake uv run pytest` — 26 passed.
+
+These checks establish the required refusal when no valid citation remains;
+they do not verify semantic claim support or complete Q3/Q4 behavior.
 
 ## Q3 — Review-to-refusal policy
 

@@ -110,6 +110,31 @@ def test_refusal_for_an_unsupported_question_costs_zero_model_calls() -> None:
     assert _is_flagged_refusal(answer), answer
 
 
+def test_uncited_substantive_answer_returns_standard_refusal() -> None:
+    model = FakeLLM(
+        default=_reply(
+            "Chunking splits documents into passages small enough to be individually relevant.",
+            [],
+            confidence=0.99,
+            review=False,
+        )
+    )
+
+    result = YourAgent(client=model).run(SUPPORTED)
+    answer = result.answer
+
+    assert len(model.calls) == 1, "the supported question must reach the model"
+    assert answer.answer == course_pipeline.REFUSAL_TEXT
+    assert answer.citations == ()
+    assert answer.confidence == 0.0
+    assert answer.needs_human_review is True
+    assert any(
+        event.kind == "decision"
+        and event.detail == "no valid citations remained; flagged refusal"
+        for event in result.trace
+    ), result.trace
+
+
 def test_configured_top_k_is_shared_by_safety_and_answer_retrieval(monkeypatch) -> None:
     original_retrieve = application.retrieve
     calls: list[tuple[int, list]] = []
@@ -149,6 +174,38 @@ def test_citation_retrieval_never_returned_is_stripped_and_flagged() -> None:
     assert "rag-basics" in answer.citations, "the citation retrieval did return survives"
     assert answer.needs_human_review
     assert answer.confidence <= 0.2
+
+
+def test_all_citations_removed_returns_standard_refusal() -> None:
+    fabricated_citation = "not-a-real-document"
+    model = FakeLLM(
+        default=_reply(
+            "Chunking splits documents into passages small enough to be individually relevant.",
+            [fabricated_citation],
+            confidence=0.99,
+            review=False,
+        )
+    )
+
+    result = YourAgent(client=model).run(SUPPORTED)
+    answer = result.answer
+
+    assert len(model.calls) == 1, "the supported question must reach the model"
+    assert any(
+        event.kind == "decision"
+        and event.detail.startswith("fabricated citations stripped:")
+        and fabricated_citation in event.detail
+        for event in result.trace
+    ), result.trace
+    assert any(
+        event.kind == "decision"
+        and event.detail == "no valid citations remained; flagged refusal"
+        for event in result.trace
+    ), result.trace
+    assert answer.answer == course_pipeline.REFUSAL_TEXT
+    assert answer.citations == ()
+    assert answer.confidence == 0.0
+    assert answer.needs_human_review is True
 
 
 # ------------------------------------------------ an instruction inside retrieved text

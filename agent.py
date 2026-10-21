@@ -236,6 +236,25 @@ class YourAgent:
                 ),
             )
 
+        if not result.answer.citations:
+            refusal = _refusal()
+            if (
+                result.answer.answer == refusal.answer
+                and result.answer.confidence == refusal.confidence
+                and result.answer.needs_human_review is refusal.needs_human_review
+            ):
+                return result
+            return AgentResult(
+                answer=refusal,
+                trace=result.trace
+                + (
+                    TraceEvent(
+                        "decision",
+                        "no valid citations remained; flagged refusal",
+                    ),
+                ),
+            )
+
         if _needs_application_refusal(result):
             result = AgentResult(
                 answer=_refusal(),

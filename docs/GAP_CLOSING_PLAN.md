@@ -180,7 +180,7 @@ Commit: `3a8ac9420769a5fb71abe5939e9acc552efa8e02`.
 
 ### B2 — Missing-citation requirement
 
-Status: pending B1 review
+Status: passed
 
 Contract: Q2
 
@@ -197,9 +197,47 @@ Completion condition:
 
 Focused tests demonstrate compliance or expose the exact contract violations.
 
+### Outcome
+
+Status: passed
+
+Tested HEAD: `e843309b20790e9f3a42f520a62bfb29e0220975`.
+
+Working-tree changes present during verification: uncommitted changes to
+`agent.py` and `tests/test_contract.py`. The test and implementation changes
+were not part of the tested HEAD; no commit SHA is assigned to them here.
+
+Before the correction, the two focused Q2 tests failed and the full offline
+suite reported 2 failed, 24 passed. After the correction:
+
+- Focused Q2 tests: `BOOTCAMP_PROVIDER=fake uv run pytest tests/test_contract.py::test_uncited_substantive_answer_returns_standard_refusal tests/test_contract.py::test_all_citations_removed_returns_standard_refusal` — 2 passed.
+- Partial-sanitization regression: `BOOTCAMP_PROVIDER=fake uv run pytest tests/test_contract.py::test_citation_retrieval_never_returned_is_stripped_and_flagged` — 1 passed.
+- Full offline suite: `BOOTCAMP_PROVIDER=fake uv run pytest` — 26 passed.
+- Diff check: `git diff --check` — passed.
+
+Changed files:
+
+- `agent.py`
+- `tests/test_contract.py`
+
+Evidence or limitation:
+
+The correction is in the application wrapper, after the existing
+instruction-content check and before the citation-sanitization review
+exception. It preserves the course trace, including citation-sanitization
+events, and appends a missing-citation decision when converting an uncited
+result. An already-standard refusal is returned unchanged. The regression
+tests are `test_uncited_substantive_answer_returns_standard_refusal` and
+`test_all_citations_removed_returns_standard_refusal`. The existing partial
+citation-sanitization test remains passing. This verifies the citation
+requirement, not semantic claim support. Q3 mixed-review provenance remains
+unresolved and was not changed by B2.
+
+Reviewed: 2026-10-21.
+
 ### B3 — Review-reason combinations
 
-Status: pending B2 review
+Status: in progress
 
 Contract: Q3
 
