@@ -237,7 +237,7 @@ Reviewed: 2026-10-21.
 
 ### B3 — Review-reason combinations
 
-Status: in progress
+Status: passed
 
 Contract: Q3
 
@@ -262,6 +262,47 @@ Completion condition:
 
 Each disposition is exercised, and any interface limitation is explicitly
 recorded before choosing a fix.
+
+### Outcome
+
+Status: passed
+
+Tested HEAD: `7c193fb3397f93333313d6ab3ed550b0e11645a9`.
+
+Working-tree changes present during verification: uncommitted changes to
+`agent.py` and `tests/test_contract.py`. The implementation and test changes
+were not part of the tested HEAD; no commit SHA is assigned to them here.
+
+Commands and actual outcomes:
+
+- Focused Q3/observer cases: `BOOTCAMP_PROVIDER=fake uv run pytest tests/test_contract.py::test_model_requested_review_returns_standard_refusal tests/test_contract.py::test_model_requested_review_with_sanitization_returns_standard_refusal tests/test_contract.py::test_citation_retrieval_never_returned_is_stripped_and_flagged tests/test_contract.py::test_parse_repair_uses_review_flag_from_valid_response tests/test_contract.py::test_review_observation_is_isolated_between_runs tests/test_contract.py::test_unknown_review_provenance_returns_standard_refusal tests/test_contract.py::test_two_parse_failures_preserve_course_refusal_without_provenance_event` — 9 passed.
+- Q2 plus refusal/provider-error/timeout checks: `BOOTCAMP_PROVIDER=fake uv run pytest tests/test_contract.py::test_uncited_substantive_answer_returns_standard_refusal tests/test_contract.py::test_all_citations_removed_returns_standard_refusal tests/test_contract.py::test_refusal_for_an_unsupported_question_costs_zero_model_calls tests/test_contract.py::test_provider_error_is_flagged_not_raised tests/test_contract.py::test_timeout_on_a_hanging_provider_is_flagged_within_a_second` — 5 passed.
+- Full offline suite: `BOOTCAMP_PROVIDER=fake uv run pytest` — 34 passed.
+- Diff check: `git diff --check` — passed.
+
+Changed files:
+
+- `agent.py`
+- `tests/test_contract.py`
+
+Evidence or limitation:
+
+The request-scoped observer uses the exact course `parse_research_answer`
+function, retains only the original parsed review boolean, and is constructed
+locally for each `YourAgent.run()`. It sits outside `TimeoutClient`; timeout
+cancellation and concurrent-provider safety are not established. The repair
+tests verify that invalid first output is rejected and the valid repair's
+review flag controls disposition. Successive-run tests verify outcomes;
+request-local construction is also established by code inspection. The
+unknown-provenance fallback test uses a controlled local test seam rather
+than the ordinary pipeline. The tests verify that model-requested review
+refuses with and without citation sanitization, while sanitization-only
+review with a surviving valid citation preserves the cleaned, low-confidence,
+flagged answer. Two parse failures preserve the course's canonical refusal
+without a provenance-failure decision. These are offline checks, not
+live-model quality evidence. Q4 boundary coverage remains pending.
+
+Reviewed: 2026-10-21.
 
 ### B4 — Detector boundaries and returned-answer override
 

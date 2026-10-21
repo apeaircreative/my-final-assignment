@@ -24,7 +24,14 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from bootcamp_agent.agent import AgentResult, TraceEvent, _refusal, answer_question
+from bootcamp_agent.agent import (
+    AnswerParseError,
+    AgentResult,
+    TraceEvent,
+    _refusal,
+    answer_question,
+    parse_research_answer,
+)
 from bootcamp_agent.config import load_settings
 from bootcamp_agent.documents import Document, load_corpus
 from bootcamp_agent.llm import LLMClient, get_client
@@ -140,17 +147,66 @@ class TimeoutClient:
         return result[0]
 
 
-def _needs_application_refusal(result: AgentResult) -> bool:
-    """Refuse model-flagged answers unless review came from citation sanitization."""
+class _ReviewFlagObserver:
+    """Observe only the parsed review flag for one answer request."""
 
-    if not result.answer.needs_human_review:
-        return False
+    def __init__(self, client: LLMClient) -> None:
+        self.client = client
+        self.review_requested: bool | None = None
 
-    citation_validation_review = any(
+    def complete(self, system: str, user: str) -> str:
+        raw = self.client.complete(system=system, user=user)
+        try:
+            answer = parse_research_answer(raw)
+        except AnswerParseError:
+            return raw
+        self.review_requested = answer.needs_human_review
+        return raw
+
+
+def _is_standard_refusal(answer: ResearchAnswer) -> bool:
+    refusal = _refusal()
+    return (
+        answer.answer == refusal.answer
+        and answer.citations == refusal.citations
+        and answer.confidence == refusal.confidence
+        and answer.needs_human_review is refusal.needs_human_review
+    )
+
+
+def _has_citation_sanitization_event(result: AgentResult) -> bool:
+    return any(
         event.kind == "decision" and event.detail.startswith("fabricated citations stripped:")
         for event in result.trace
     )
-    return not citation_validation_review
+
+
+def _apply_review_policy(
+    result: AgentResult,
+    original_review: bool | None,
+) -> AgentResult:
+    if _is_standard_refusal(result.answer):
+        return result
+
+    if original_review is True:
+        decision = "model requested human review; flagged refusal"
+    elif original_review is None:
+        decision = "review provenance unavailable; flagged refusal"
+    elif not result.answer.needs_human_review:
+        return result
+    elif (
+        result.answer.citations
+        and result.answer.confidence <= 0.2
+        and _has_citation_sanitization_event(result)
+    ):
+        return result
+    else:
+        decision = "review state inconsistent with citation sanitization; flagged refusal"
+
+    return AgentResult(
+        answer=_refusal(),
+        trace=result.trace + (TraceEvent("decision", decision),),
+    )
 
 
 class YourAgent:
@@ -197,10 +253,11 @@ class YourAgent:
         try:
             prompt_client = PromptExtensionClient(self.client)
             timeout_client = TimeoutClient(prompt_client, self.timeout_s)
+            review_observer = _ReviewFlagObserver(timeout_client)
             result = answer_question(
                 question,
                 self.documents,
-                timeout_client,
+                review_observer,
                 max_tool_calls=3,
                 top_k=self.top_k,
             )
@@ -237,15 +294,10 @@ class YourAgent:
             )
 
         if not result.answer.citations:
-            refusal = _refusal()
-            if (
-                result.answer.answer == refusal.answer
-                and result.answer.confidence == refusal.confidence
-                and result.answer.needs_human_review is refusal.needs_human_review
-            ):
+            if _is_standard_refusal(result.answer):
                 return result
             return AgentResult(
-                answer=refusal,
+                answer=_refusal(),
                 trace=result.trace
                 + (
                     TraceEvent(
@@ -255,18 +307,7 @@ class YourAgent:
                 ),
             )
 
-        if _needs_application_refusal(result):
-            result = AgentResult(
-                answer=_refusal(),
-                trace=result.trace
-                + (
-                    TraceEvent(
-                        "decision",
-                        "answer requested human review; flagged refusal",
-                    ),
-                ),
-            )
-        return result
+        return _apply_review_policy(result, review_observer.review_requested)
 
     def __call__(self, question: str) -> ResearchAnswer:
         return self.run(question).answer

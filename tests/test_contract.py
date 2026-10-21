@@ -56,6 +56,24 @@ def _reply(answer: str, citations: list[str], confidence: float = 0.9, review: b
 def _is_flagged_refusal(answer) -> bool:
     return answer.needs_human_review and answer.citations == () and answer.confidence <= 0.2
 
+
+class SequencedLLM:
+    def __init__(self, responses: list[str]) -> None:
+        self.responses = iter(responses)
+        self.calls: list[tuple[str, str]] = []
+
+    def complete(self, system: str, user: str) -> str:
+        self.calls.append((system, user))
+        return next(self.responses)
+
+
+def _assert_standard_refusal(answer) -> None:
+    assert answer.answer == course_pipeline.REFUSAL_TEXT
+    assert answer.citations == ()
+    assert answer.confidence == 0.0
+    assert answer.needs_human_review is True
+
+
 def test_call_delegates_to_run_and_returns_its_answer(monkeypatch) -> None:
     agent = YourAgent(client=FakeLLM())
     answer = ResearchAnswer(
@@ -164,16 +182,178 @@ def test_citation_retrieval_never_returned_is_stripped_and_flagged() -> None:
         default=_reply(
             "Chunking splits documents into passages at paragraph boundaries.",
             ["rag-basics", "rag-handbook-v9"],  # the second one does not exist
+            confidence=0.9,
+            review=False,
         )
     )
 
     answer = YourAgent(client=model)(SUPPORTED)
 
     assert len(model.calls) == 1, "the question is supported, so the model is asked once"
-    assert "rag-handbook-v9" not in answer.citations
-    assert "rag-basics" in answer.citations, "the citation retrieval did return survives"
+    assert answer.answer == "Chunking splits documents into passages at paragraph boundaries."
+    assert answer.citations == ("rag-basics",)
     assert answer.needs_human_review
     assert answer.confidence <= 0.2
+
+
+def test_model_requested_review_returns_standard_refusal() -> None:
+    model = FakeLLM(
+        default=_reply(
+            "Chunking splits documents into passages at paragraph boundaries.",
+            ["rag-basics"],
+            confidence=0.99,
+            review=True,
+        )
+    )
+
+    result = YourAgent(client=model).run(SUPPORTED)
+    answer = result.answer
+
+    assert len(model.calls) == 1, "the supported question must reach the model"
+    assert answer.answer == course_pipeline.REFUSAL_TEXT
+    assert answer.citations == ()
+    assert answer.confidence == 0.0
+    assert answer.needs_human_review is True
+
+
+def test_model_requested_review_with_sanitization_returns_standard_refusal() -> None:
+    fabricated_citation = "not-a-real-document"
+    model = FakeLLM(
+        default=_reply(
+            "Chunking splits documents into passages at paragraph boundaries.",
+            ["rag-basics", fabricated_citation],
+            confidence=0.99,
+            review=True,
+        )
+    )
+
+    result = YourAgent(client=model).run(SUPPORTED)
+    answer = result.answer
+
+    assert len(model.calls) == 1, "the supported question must reach the model"
+    assert any(
+        event.kind == "decision"
+        and event.detail.startswith("fabricated citations stripped:")
+        and fabricated_citation in event.detail
+        for event in result.trace
+    ), result.trace
+    assert answer.answer == course_pipeline.REFUSAL_TEXT
+    assert answer.citations == ()
+    assert answer.confidence == 0.0
+    assert answer.needs_human_review is True
+
+
+@pytest.mark.parametrize("review", [False, True], ids=["sanitization-only", "model-review"])
+def test_parse_repair_uses_review_flag_from_valid_response(review: bool) -> None:
+    fabricated_citation = "not-a-real-document"
+    model = SequencedLLM(
+        [
+            "{not valid JSON",
+            _reply(
+                "Chunking splits documents into passages at paragraph boundaries.",
+                ["rag-basics", fabricated_citation],
+                confidence=0.99,
+                review=review,
+            ),
+        ]
+    )
+
+    result = YourAgent(client=model).run(SUPPORTED)
+    answer = result.answer
+
+    assert len(model.calls) == 2
+    assert any(
+        event.kind == "decision" and event.detail.startswith("parse failed (")
+        for event in result.trace
+    ), result.trace
+    assert any(
+        event.kind == "decision"
+        and event.detail.startswith("fabricated citations stripped:")
+        for event in result.trace
+    ), result.trace
+    if review:
+        _assert_standard_refusal(answer)
+    else:
+        assert answer.answer == "Chunking splits documents into passages at paragraph boundaries."
+        assert answer.citations == ("rag-basics",)
+        assert answer.confidence <= 0.2
+        assert answer.needs_human_review is True
+
+
+@pytest.mark.parametrize(
+    ("review_sequence"),
+    [(True, False), (False, True)],
+    ids=["true-then-false", "false-then-true"],
+)
+def test_review_observation_is_isolated_between_runs(review_sequence: tuple[bool, bool]) -> None:
+    fabricated_citation = "not-a-real-document"
+    model = SequencedLLM(
+        [
+            _reply(
+                "Chunking splits documents into passages at paragraph boundaries.",
+                ["rag-basics", fabricated_citation],
+                confidence=0.99,
+                review=review,
+            )
+            for review in review_sequence
+        ]
+    )
+    agent = YourAgent(client=model)
+
+    results = [agent.run(SUPPORTED), agent.run(SUPPORTED)]
+
+    assert len(model.calls) == 2
+    for review, result in zip(review_sequence, results, strict=True):
+        if review:
+            _assert_standard_refusal(result.answer)
+        else:
+            assert result.answer.answer == "Chunking splits documents into passages at paragraph boundaries."
+            assert result.answer.citations == ("rag-basics",)
+            assert result.answer.confidence <= 0.2
+            assert result.answer.needs_human_review is True
+
+
+def test_unknown_review_provenance_returns_standard_refusal(monkeypatch) -> None:
+    model = FakeLLM(
+        default=_reply(
+            "Chunking splits documents into passages at paragraph boundaries.",
+            ["rag-basics"],
+            confidence=0.9,
+            review=False,
+        )
+    )
+
+    def complete_without_observation(observer, system: str, user: str) -> str:
+        return observer.client.complete(system=system, user=user)
+
+    monkeypatch.setattr(
+        application._ReviewFlagObserver,
+        "complete",
+        complete_without_observation,
+    )
+    result = YourAgent(client=model).run(SUPPORTED)
+
+    assert len(model.calls) == 1
+    _assert_standard_refusal(result.answer)
+    assert any(
+        event.kind == "decision"
+        and event.detail == "review provenance unavailable; flagged refusal"
+        for event in result.trace
+    ), result.trace
+
+
+def test_two_parse_failures_preserve_course_refusal_without_provenance_event() -> None:
+    model = SequencedLLM(["{not valid JSON", "still not valid JSON"])
+
+    result = YourAgent(client=model).run(SUPPORTED)
+
+    assert len(model.calls) == 2
+    _assert_standard_refusal(result.answer)
+    assert any(
+        event.kind == "decision" and event.detail.startswith("parse failed twice (")
+        for event in result.trace
+    ), result.trace
+    assert not any("review provenance" in event.detail for event in result.trace)
 
 
 def test_all_citations_removed_returns_standard_refusal() -> None:

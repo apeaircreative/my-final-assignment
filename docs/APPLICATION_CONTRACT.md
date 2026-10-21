@@ -190,14 +190,36 @@ claim. The retained answer remains low-confidence and flagged.
 
 ### Verification status
 
-Pending.
+Verified at HEAD `7c193fb3397f93333313d6ab3ed550b0e11645a9`, with uncommitted
+implementation and test changes in `agent.py` and `tests/test_contract.py`
+present during verification.
 
-Required cases:
+- `test_model_requested_review_returns_standard_refusal` and
+  `test_model_requested_review_with_sanitization_returns_standard_refusal`:
+  model-requested review produces the standard refusal with and without
+  citation sanitization.
+- `test_citation_retrieval_never_returned_is_stripped_and_flagged`:
+  sanitization-only review with a valid citation remaining preserves the
+  cleaned, low-confidence, flagged answer; the controlled model input has
+  `needs_human_review=False`.
+- `test_parse_repair_uses_review_flag_from_valid_response`: malformed first
+  output is rejected by the course parser; the valid repair's review flag
+  controls the result.
+- `test_review_observation_is_isolated_between_runs`: both review-flag orders
+  on the same agent and client produce their expected outcomes.
+- `test_unknown_review_provenance_returns_standard_refusal`: missing observer
+  state fails closed; this test uses a controlled local seam.
+- `test_two_parse_failures_preserve_course_refusal_without_provenance_event`:
+  the course refusal is preserved without an extra provenance-failure event.
+- Q3/observer focused cases: 9 passed; Q2 plus refusal/provider-error/timeout
+  checks: 5 passed; full offline suite: 34 passed; `git diff --check` passed.
 
-1. Model review with valid citations.
-2. Sanitization-only review with a valid citation remaining.
-3. Model review plus citation sanitization.
-4. Sanitization removing every citation.
+The application observer uses the exact course parser and retains only the
+parsed review boolean. It is request-scoped and sits outside `TimeoutClient`.
+Successive-run tests verify outcomes; request-local construction is also
+established by code inspection. These offline tests do not establish timeout
+cancellation, concurrent-provider safety, or live-model quality. Q4 boundary
+coverage remains pending.
 
 ## Q4 — Retrieved-content instruction check
 
