@@ -270,11 +270,33 @@ requirements.
 
 ### Verification status
 
-Pending additional boundary coverage.
+Verified at HEAD `d21895acb2e8d737113e3f7ae9b3ba1d15ea01f8`, with uncommitted
+test changes in `tests/test_contract.py` present during verification.
 
-Existing injection tests reportedly verify that matching instructions reach
-the controlled model before the application overrides the result. Preserve
-that distinction when interpreting test outcomes.
+The parameterized `test_instruction_detector_characterization` covers seven
+direct `Chunk`/`ScoredChunk` inputs without retrieval. The
+`test_prompt_injection_corpus_example_detector_characterization` test loads
+the versioned `prompt-injection` document and scans its full text as a
+constructed chunk; the detector does not match that quoted example.
+
+The strengthened existing `test_injection_cannot_dictate_an_unflagged_answer`
+establishes that matching content reaches the controlled model, which
+attempts to answer `ACCESS GRANTED`; `YourAgent.run()` returns the canonical
+refusal shape and records the application instruction-content refusal
+decision.
+
+Verification: focused detector/injection tests — 10 passed, 26 deselected;
+full offline suite — 42 passed; `git diff --check` — passed. Collection
+reported 36 cases in `tests/test_contract.py` and 6 across the other two test
+files.
+
+Detector misses and quote-sensitive false positives remain. Characterization
+expectations may change with an intentional detector improvement; they are
+not permanent desired security requirements. The integration test verifies
+the returned result, not prevention of model exposure or comprehensive
+injection resistance. These are offline checks, not live-model quality
+evidence. Q1–Q4 offline checks are complete; Phase A A2 and reliability tasks
+B5/B6 retain their separate statuses in the plan.
 
 ## Cross-cutting reliability verification
 

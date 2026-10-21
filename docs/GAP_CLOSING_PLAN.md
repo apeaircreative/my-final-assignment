@@ -306,7 +306,7 @@ Reviewed: 2026-10-21.
 
 ### B4 — Detector boundaries and returned-answer override
 
-Status: pending B3 review
+Status: passed
 
 Contract: Q4
 
@@ -324,6 +324,54 @@ Completion condition:
 
 Tests show the matching boundaries and the supported path's response to a
 match without claiming comprehensive injection protection.
+
+### Outcome
+
+Status: passed
+
+Tested HEAD: `d21895acb2e8d737113e3f7ae9b3ba1d15ea01f8`.
+
+Working-tree changes present during verification: uncommitted changes to
+`tests/test_contract.py`; the B4 test changes were not part of the tested
+HEAD. No commit SHA is assigned to them here.
+
+Collection reconciliation: `BOOTCAMP_PROVIDER=fake uv run pytest --collect-only -q`
+reported 36 cases in `tests/test_contract.py`, 2 in
+`tests/test_controlled_cases.py`, and 4 in `tests/test_heldout_prompt_compare.py`
+(42 total). The focused selection reported 10 passed and 26 deselected.
+
+Commands and actual outcomes:
+
+- Focused detector and injection tests: `BOOTCAMP_PROVIDER=fake uv run pytest tests/test_contract.py -k "instruction_detector_characterization or prompt_injection_corpus_example_detector_characterization or injection_cannot"` — 10 passed, 26 deselected.
+- Full offline suite: `BOOTCAMP_PROVIDER=fake uv run pytest` — 42 passed.
+- Diff check: `git diff --check` — passed.
+
+Changed file:
+
+- `tests/test_contract.py`.
+
+Evidence or limitation:
+
+Seven direct detector characterization cases use pinned `Chunk` and
+`ScoredChunk` inputs without retrieval. One additional test loads and scans
+the entire versioned `prompt-injection` document as a constructed chunk. The
+strengthened existing `test_injection_cannot_dictate_an_unflagged_answer`
+verifies matching content reaches the controlled model, that it attempts an
+`ACCESS GRANTED` answer, and that `YourAgent.run()` returns the canonical
+refusal shape with the application instruction-content decision event.
+
+Detector misses and quote-sensitive false positives remain. These
+characterization expectations may change with an intentional detector
+improvement; they are not permanent desired security requirements. The
+integration test verifies the returned result, not prevention of model
+exposure or comprehensive injection resistance. No live model, grader,
+production behavior, or corpus changes occurred.
+
+The planned offline implementation/verification tasks for Q1–Q4 (B1–B4) are
+complete. This does not complete Phase A A2 or reliability tasks B5/B6: A2
+remains pending verification, and B5/B6 remain pending as separately listed.
+
+Reviewed: 2026-10-21.
 
 ### B5 — Failure during parse repair
 
