@@ -274,6 +274,15 @@ detector is intentionally conservative rather than a comprehensive
 prompt-injection classifier, and the project does not claim complete
 protection against every possible adversarial document. See the ranked
 limitations in [docs/ISSUES.md](docs/ISSUES.md).
+
+## Application contract and gap-closing work
+
+- [Current project state](docs/CURRENT_STATE.md)
+- [Accepted application contract](docs/APPLICATION_CONTRACT.md)
+- [Gap-closing plan and verification](docs/GAP_CLOSING_PLAN.md)
+
+Accepted requirements and verified implementation are tracked separately.
+
 ## How to run it
 
 ```bash

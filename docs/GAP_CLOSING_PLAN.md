@@ -1,0 +1,330 @@
+# Gap-closing plan
+---
+
+Status: sequential implementation plan
+Created: 2026-10-21
+Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
+
+---
+
+## Purpose
+
+Turn the accepted application decisions into executable offline checks,
+identify demonstrated violations, and make the smallest appropriate fixes.
+
+Policy source:
+[APPLICATION_CONTRACT.md](APPLICATION_CONTRACT.md)
+
+Evidence snapshot:
+[CURRENT_STATE.md](CURRENT_STATE.md)
+
+## Scope boundaries
+
+Unless separately approved:
+
+- No live model calls or Ollama runs.
+- No public or private grader runs.
+- No prompt tuning or top-k changes.
+- No retrieval redesign or new dependencies.
+- No corpus edits.
+- No modification of historical run artifacts.
+- No promotion of teaching helpers to supported interfaces.
+- No automatic commits.
+
+Inspect the current checkout and unrelated worktree changes before editing.
+Do not assume the working tree still matches the reviewed baseline.
+
+## Workflow
+
+For each task:
+
+1. Read the relevant accepted rule and current implementation.
+2. Check whether existing tests already cover it.
+3. Define the expected behavior before editing.
+4. Add the smallest focused test.
+5. Run the focused test and full offline suite.
+6. Record actual results and review the diff.
+7. Stop before a production fix if the test exposes a violation.
+8. Approve the smallest fix separately.
+9. Verify the regression and review before committing.
+
+### Passing and failing tests
+
+A characterization test records an observed boundary and may pass immediately.
+
+An accepted-requirement test may fail because the requirement is not yet
+implemented. A failure is evidence, not permission to weaken the requirement.
+
+Do not leave a blocking failing test on the normal integration branch without
+an explicit workflow decision. Keep the failing result as evidence on the
+working branch; after review, pair the test with its approved correction
+before merging or committing to a branch expected to remain green.
+
+## Phase A — Documentation and evidence reconciliation
+
+### A1 — Record accepted decisions
+
+Status: decisions accepted; repository application pending
+
+Tasks:
+
+- Add the accepted application contract.
+- Clearly distinguish accepted policy from implemented behavior.
+- Identify supported and excluded interfaces.
+- Link these documents from the README.
+- Add a short pointer in AGENTS.md without duplicating the contract.
+
+Completion condition:
+
+The repository contains one unambiguous statement of the accepted rules.
+
+### A2 — Reconcile reported results
+
+Status: pending verification
+
+Tasks:
+
+- Verify test collection counts and passing outcomes.
+- Read both complete P3 artifacts.
+- Verify reported baseline and candidate results.
+- Verify the cross-run answer, retrieval, and grader-outcome identity claim.
+- Correct the README's stale P3 status and test count.
+- Correct the selected-case repeatability statement in docs/extra.md.
+
+Completion condition:
+
+The current-state summary and existing documentation agree with the retained
+evidence. Historical results remain attached to their recorded revisions.
+
+## Phase B — Offline verification
+
+Complete one task at a time.
+
+### B1 — Supported-interface delegation
+
+Status: ready
+
+Contract: Q1
+
+Requirement:
+
+Calling the agent forwards the unchanged question to that instance's run()
+exactly once and returns result.answer.
+
+Proposed test:
+
+test_call_delegates_to_run_and_returns_its_answer
+
+Allowed changes:
+
+tests/test_contract.py only.
+
+Implementation instruction:
+
+> Read AGENTS.md, agent.py, and tests/test_contract.py.
+>
+> Inspect the worktree and report unrelated changes. Check whether an existing
+> test already verifies this exact delegation behavior; do not duplicate it.
+>
+> If coverage is missing, instantiate YourAgent with the existing FakeLLM.
+> Construct a valid ResearchAnswer and AgentResult using the actual types.
+> Replace run on that specific instance with a recording stub returning the
+> constructed result.
+>
+> Call the agent with a fixed question. Assert that the stub receives exactly
+> that question, exactly once, and that the returned object is result.answer.
+>
+> Do not invoke retrieval, a real provider, Ollama, a grader, or a network
+> service. Do not change production code or add xfail/skip markers.
+>
+> Run the focused test, full offline suite, and git diff --check. Show the
+> diff, actual command outcomes, and final worktree status. Do not commit.
+> If the test fails, explain the failure and stop before fixing production
+> code.
+
+Completion condition:
+
+Direct delegation is covered by a passing isolated test, or existing
+equivalent coverage is identified and documented.
+
+### B2 — Missing-citation requirement
+
+Status: pending B1 review
+
+Contract: Q2
+
+Cases:
+
+- A substantive model answer supplies no citations and requests no review.
+- Sanitization removes every supplied citation.
+
+Required outcome:
+
+The standard flagged refusal.
+
+Completion condition:
+
+Focused tests demonstrate compliance or expose the exact contract violations.
+
+### B3 — Review-reason combinations
+
+Status: pending B2 review
+
+Contract: Q3
+
+Cases:
+
+- Model requests review with valid citations.
+- Model does not request review; sanitization removes an invalid citation
+  while a valid one remains.
+- Model requests review and sanitization also occurs.
+- Sanitization removes all citations; reuse B2 coverage where appropriate.
+
+Required outcomes:
+
+Match the accepted Q3 disposition table.
+
+Additional investigation:
+
+Determine whether the returned course interface preserves the model's
+original review reason. Do not infer provenance solely from the final flag.
+
+Completion condition:
+
+Each disposition is exercised, and any interface limitation is explicitly
+recorded before choosing a fix.
+
+### B4 — Detector boundaries and returned-answer override
+
+Status: pending B3 review
+
+Contract: Q4
+
+Tasks:
+
+- Add direct offline characterization cases for exact phrases, benign quotes,
+  regex variants, and known misses.
+- Preserve a clear distinction between detector unit tests and answer-path
+  integration tests.
+- Reuse existing integration coverage where it already verifies exposure
+  followed by a returned refusal.
+- Do not broaden the detector or move the check during characterization.
+
+Completion condition:
+
+Tests show the matching boundaries and the supported path's response to a
+match without claiming comprehensive injection protection.
+
+### B5 — Failure during parse repair
+
+Status: pending B4 review
+
+Reliability target:
+
+Preserve an accurate account of a malformed first response followed by a
+failed repair call.
+
+Controlled client:
+
+- First complete() call returns malformed output.
+- Second complete() call raises a supported provider exception.
+
+Tasks:
+
+- Inspect the returned trace.
+- Record which completed and failed steps are preserved or lost.
+- Specify the desired trace sequence before proposing a correction.
+
+Completion condition:
+
+An executable case establishes the behavior and any trace-fidelity violation.
+
+### B6 — Timeout boundaries
+
+Status: pending B5 review
+
+Tasks:
+
+- Identify what existing tests establish about caller waiting.
+- Distinguish waiting bounds from cancellation and worker cleanup.
+- Preserve the tracked limitation unless a separate lifecycle fix is approved.
+- Do not claim that a timely refusal proves provider cancellation.
+
+Completion condition:
+
+Tests and documentation accurately describe the enforced boundary and the
+remaining lifecycle risk.
+
+## Phase C — Demonstrated violations only
+
+For each failed accepted-requirement test:
+
+1. State the violated rule.
+2. Explain the smallest compatible correction.
+3. Obtain approval for the implementation change.
+4. Apply the correction without unrelated refactoring.
+5. Run the focused regression and full offline suite.
+6. Review traces and output shape where relevant.
+7. Update verification status and remaining limitations.
+8. Review before committing.
+
+Do not change the pinned course dependency, public interfaces, or architecture
+as an incidental fix.
+
+## Subsequent answer-quality evaluation
+
+Only after the relevant correctness work:
+
+- Freeze the candidate change and evaluation protocol.
+- Keep model/runtime and requested sampling settings explicit.
+- Define adoption and regression criteria before viewing results.
+- Separate provider failures, mechanical rubric failures, and source-support
+  review.
+- Use newly authored, independently reviewed cases where required.
+- Treat previously reviewed sets as consumed.
+- Preserve answers, retrieved evidence, traces, and provenance.
+
+A passing offline suite is not evidence of improved live-model answer quality.
+
+## Per-task outcome record
+
+Copy this section under each completed task.
+
+### Outcome
+
+Status: [passed / violation demonstrated / fixed and verified / blocked]
+
+Tested revision or working-tree description:
+[actual revision and relevant uncommitted changes]
+
+Commands and actual outcomes:
+
+- Focused test: [command and result]
+- Full offline suite: [command and result]
+- Diff check: [command and result]
+
+Changed files:
+
+- [actual file]
+
+Evidence or limitation:
+
+[what the result proves and does not prove]
+
+Reviewed:
+[date and decision]
+
+Commit:
+[actual SHA when available; otherwise pending]
+
+## Evidence retention
+
+Keep concise offline verification outcomes in this plan.
+
+Keep executable assertions in tests/.
+
+Keep existing model-experiment artifacts in runs/ unchanged.
+
+Do not copy every successful terminal transcript into the repository.
+Retain a longer transcript only when needed to explain a failure or
+non-obvious verification result.
