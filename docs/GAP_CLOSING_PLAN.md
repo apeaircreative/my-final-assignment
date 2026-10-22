@@ -80,7 +80,7 @@ The repository contains one unambiguous statement of the accepted rules.
 
 ### A2 — Reconcile reported results
 
-Status: pending verification
+Status: Documentation reconciliation reviewed locally; pending commit, push, and PR checks/review.
 
 Tasks:
 

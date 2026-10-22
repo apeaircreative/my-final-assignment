@@ -128,10 +128,11 @@ flowchart TD
 Retrieved passages are untrusted data. The course engine tells the model to
 treat them as data rather than instructions, but the application does not rely
 on model compliance alone. It retains the wrapper retrieval result and applies
-a deterministic exact-literal safety check after the course engine returns. If
-the configured instruction-like pattern is found, the application replaces any
-model output with a flagged refusal: no citations, confidence `0.0`, and human
-review required.
+a deterministic check against configured literal phrases and regex patterns
+after the course engine returns. If retrieved content matches, the application
+replaces the generated answer with a flagged refusal: no citations, confidence
+`0.0`, and human review required. This controls the returned answer for
+detector matches; it does not prevent retrieved text from reaching the model.
 
 This is a narrow deterministic guardrail for the configured pattern, not a
 claim of comprehensive prompt-injection detection.
@@ -151,7 +152,7 @@ quality.
 
 | What | Model | Result |
 |---|---|---|
-| Local contract tests | FakeLLM | **16/16 passed** after shared top-k configuration and comparison coverage. |
+| Offline test suite | Fake provider | **42 passed** in a fresh run on 2026-10-22; this verifies offline checks, not live-model answer quality. |
 | Public practice grader | Ollama `qwen2.5:7b-instruct` | **5/10 (50%)** in the preserved 2026-10-19 report; critical safety gate failed. Four grounded cases failed `claim_support`, and critical refusal case `fa-09` failed refusal gates. |
 | Top-k comparison, run 1 | Ollama `qwen2.5:7b-instruct-baseline` | k=3: 4/10, critical fail; k=4: 5/10, critical pass; k=5: 5/10, critical fail. Zero provider failures. [Artifact](runs/topk/topk_20261019T141256980988Z.json). |
 | Top-k comparison, reversed repeat | Same model tag and source hashes | k=5: 4/10, critical fail; k=4: 5/10, critical fail. Zero provider failures; critical `fa-05` and `fa-07` failed claim-support at both settings. [Artifact](runs/topk/topk_20261019T143804177172Z.json). |
@@ -227,21 +228,14 @@ review are in [docs/extra.md](docs/extra.md#rd-priority-matrix).
 
 The P2 candidate set is now consumed; do not reuse it for prompt tuning. Its
 artifact and source review are in
-[docs/extra.md](docs/extra.md#p2-paired-comparison-results). P3 is ready: run
-the paired full-public-set regression check before making a prompt-adoption
-decision:
-
-```bash
-BOOTCAMP_PROVIDER=ollama \
-BOOTCAMP_MODEL=qwen2.5:7b-instruct-baseline \
-OLLAMA_BASE_URL=http://127.0.0.1:11434/v1 \
-uv run python scripts/compare_public_prompts.py \
-  --top-k 4 --temperature 0 --top-p 0.1 --seed 42
-```
-
-This evaluates all ten public cases under baseline, then item-detail, and saves
-one comparison artifact under `runs/public-prompt-comparison/`. It does not
-invoke the unavailable private grader.
+[docs/extra.md](docs/extra.md#p2-paired-comparison-results). The paired P3
+public-practice comparison is complete in two preserved runs: baseline 5/10
+with the critical gate failed; item-detail 6/10 with the critical gate passed.
+These are historical public-practice results from 2026-10-19, not a fresh
+evaluation, a private-grader result, or a general quality guarantee. The two
+P3 artifacts matched on the inspected per-case answers, retrieved content, and
+grader dimensions; this observation is limited to those artifacts and does not
+establish general determinism. See the [P3 analysis](docs/extra.md#p3-paired-comparison-results).
 
 The first run showed k=4 passing the critical gate while k=5 failed it, but
 that did not reproduce: in a reversed-order repeat, both k values failed the

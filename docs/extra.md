@@ -387,12 +387,12 @@ the variant artifact is
 For `fa-05`, all baseline answers omitted the adversarial-document testing
 concept. Two of three item-detail answers included that recommendation and
 passed every grader dimension; the first variant answer omitted it and failed
-only `claim_support`. All six `fa-07` answers passed. Answers were identical
-across repeats within each condition and task, including the one failing
-variant answer. This is consistent with the new instruction helping the model
-produce fuller answers on this small pair of cases, but it is not broad
-stability evidence: there are only two public cases, three repeated calls, and
-a phrase-based grader.
+only `claim_support`. All six `fa-07` answers passed. The baseline `fa-07`
+answers contain two distinct texts across the three repeats. Item-detail
+`fa-05` also contains two distinct texts, with grader outcomes
+false/true/true. These selected-case results are not broad stability evidence:
+there are only two public cases, three repeated calls, and a phrase-based
+grader.
 
 The earlier corrected-source comparison already showed that `fa-05` can vary
 at k=4 under the baseline prompt (1/3 pass). That earlier result and this
@@ -609,14 +609,14 @@ zero provider failures. The baseline again scored 5/10 with a 4/5 critical
 gate; item-detail again scored 6/10 with a 5/5 critical gate. All category
 scores and per-case pass/fail dimensions matched.
 
-For both conditions, all ten answer texts were byte-identical between the two
-runs; citations, retrieved content/order, and grader dimensions also matched.
-This is strong evidence of repeatability for these two runs on this fixed
-machine/model/question set and requested configuration. It is **not** evidence
-that the repeated answers are correct, fully grounded, or representative of
-unseen questions. The same source-level omissions and phrase-sensitive grader
-limitations remain. The artifact records requested sampling options; it does
-not independently verify which options the running Ollama server applied.
+Direct comparison of the two artifacts showed matching per-case answers,
+retrieved content/order, and grader dimensions for both conditions. This is an
+observation about these two preserved artifacts only; it does not establish
+general determinism or prove that the answers are correct, fully grounded, or
+representative of unseen questions. The same source-level omissions and
+phrase-sensitive grader limitations remain. The artifacts record requested
+sampling options; they do not independently verify which options the running
+Ollama server applied.
 
 The score increase comes from `fa-05`: baseline failed the mechanical
 `claim_support` check while item-detail passed. On source review, baseline
@@ -650,26 +650,33 @@ paragraph-aware chunking improving relevance and quality; these go beyond the
 source just as the baseline’s “ensures” claim does.
 
 **Decision:** Keep the baseline as the default for now. Item-detail improved
-the public score by one case and changed the critical gate to pass, but the
-result is two identical runs of the same public set, and its extra explanation
-can still overgeneralize source claims. Do not treat repeatability as evidence
-about the private grader or as proof of semantic grounding. Any prompt-adoption
-decision should wait for another independently authored, source-reviewed
-comparison that checks both completeness and unsupported additions.
+the public score by one case and changed the critical gate to pass; the two
+preserved P3 artifacts match on the inspected fields, but its extra explanation
+can still overgeneralize source claims. Do not treat this artifact match as
+evidence about the private grader or as proof of semantic grounding. Any
+prompt-adoption decision should wait for another independently authored,
+source-reviewed comparison that checks both completeness and unsupported
+additions.
 
-### Next-session scope: inspect the current safety flow
+### Historical next-session recommendation after P3
 
-P3 is now repeated twice with byte-identical answers, retrievals, and grader
-outcomes under the recorded setup. This establishes repeatability only for
-these runs, not answer correctness or generalization. Do not spend the next
-session on another P3 repeat. Instead, conduct a bounded code review of the
-existing `agent.py` and `safety.py` behavior, not a redesign. The specific
-question is whether checking retrieved instruction-like content only after
-`answer_question` has called the model satisfies the intended safety policy.
-The post-answer check can replace the returned answer with a refusal, but it
-cannot prevent the model from seeing retrieved text first.
+This was the recommendation at the time of the P3 review. The bounded
+safety-flow review has since been completed and is recorded in
+[APPLICATION_CONTRACT.md](APPLICATION_CONTRACT.md) and
+[CURRENT_STATE.md](CURRENT_STATE.md); it is not a pending next-session task.
 
-In the next session:
+The two preserved P3 artifacts match on the inspected per-case answers,
+retrievals, and grader dimensions. This observation is limited to those
+artifacts; it does not establish general determinism, answer correctness, or
+generalization. Do not spend the next session on another P3 repeat. Instead,
+conduct a bounded code review of the existing `agent.py` and `safety.py`
+behavior, not a redesign. The specific question is whether checking retrieved
+instruction-like content only after `answer_question` has called the model
+satisfies the intended safety policy. The post-answer check can replace the
+returned answer with a refusal, but it cannot prevent the model from seeing
+retrieved text first.
+
+The proposed review scope at that time was:
 
 1. Trace the exact retrieval and answer-call flow, including what text the
    course pipeline places in the model prompt and what the wrapper safety check
@@ -692,13 +699,14 @@ This scope is deliberately limited to the existing bounded agent and its
 safety contract. It does not reopen P4 or claim that one static review can
 establish overall model correctness or safety.
 
-Use `uv run python scripts/compare_topk.py` to repeat the comparison on the same
-public set. The artifacts preserve per-case answers, grader dimensions, traces,
-retrieved IDs/scores, timings, and source hashes without copying question text.
-These results show variation in model output and grader performance; they do
-not establish a stable best setting, semantic claim support, or a
-retrieval-architecture improvement. Repeated public-practice runs are
-diagnostic only; any adopted behavior change should also be tested against
+The same historical note suggested repeating the comparison on the same public
+set with `uv run python scripts/compare_topk.py`. The artifacts preserve
+per-case answers, grader dimensions, traces, retrieved IDs/scores, timings, and
+source hashes without copying question text. These results show variation in
+model output and grader performance; they do not establish a stable best
+setting, semantic claim support, or a retrieval-architecture improvement.
+Repeated public-practice runs are diagnostic only, not a current next-session
+task or an adoption basis; any adopted behavior change would also require
 held-out, independently authored cases.
 
 ### Timeout and sampling evidence

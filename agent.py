@@ -1,20 +1,9 @@
-"""Your capstone agent: the one your README demos and your CI grades.
+"""Application wrapper around the course-provided source-grounded assistant.
 
-It starts as the final assignment's starter, unchanged: the same `YourAgent`,
-the same `answer_question` pipeline from the course package, the same budget.
-Calling it returns a `bootcamp_agent.schema.ResearchAnswer`, the contract the
-whole course used, so everything you built in the sessions plugs in here.
-`run(question)` returns the whole `AgentResult`, trace included, which is what
-`uv run bootcamp capstone trace "<question>"` prints.
-
-As shipped it is honest and insufficient. On the offline `FakeLLM` it refuses
-what it should refuse and answers nothing else, and some contract tests in
-`tests/test_contract.py` are marked as expected failures on purpose. Making them
-pass is the work. What to add, session by session, is in `docs/` (each file
-names the session that fills it).
-
-The provider comes from `.env` (`BOOTCAMP_PROVIDER`), and falls back to the
-offline `FakeLLM`. Keys live only in `.env`, which git ignores.
+`YourAgent.run()` adds provider-failure and timeout handling, citation and
+review policies, and a post-generation check of retrieved instruction-like
+content. Retrieval, context construction, generation, parsing, and citation-ID
+validation belong to the pinned course pipeline.
 """
 
 from __future__ import annotations

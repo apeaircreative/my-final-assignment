@@ -1,21 +1,42 @@
 # Current state of the project
 ---
 
-Status: reviewed snapshot
-Reviewed: 2026-10-21
+Status: Documentation reconciliation reviewed locally; pending commit, push, and PR checks/review.
+Reviewed: 2026-10-22
 Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
-Verification status: [state exactly what was checked]
+Verification base checkout, before this uncommitted documentation patch:
+`593eb10eab7273e3f55408233588db646081062b`
+Verification status: test-job offline checks passed on 2026-10-22; A2 remains
+pending review of the documentation patch.
 
 ---
 
-This document consolidates the project's reported state and the accepted
-gap-closing decisions. It does not establish that every requirement is
-implemented or verified.
+This document consolidates the project's state, accepted decisions, and
+verification performed at the checkout above. It does not establish that every
+requirement is implemented or verified.
 
-Historical results and test counts below are carried forward from the
-Phase A review. Before committing this snapshot, verify them against the
-repository and retained artifacts. Documentation corrections are listed
-separately because identifying a correction is not the same as applying it.
+## Verification before documentation patch
+
+On 2026-10-22, the offline test-job commands from
+[`.github/workflows/check.yml`](../.github/workflows/check.yml) were run at
+base checkout `593eb10eab7273e3f55408233588db646081062b` with
+`BOOTCAMP_PROVIDER=fake`:
+
+- `BOOTCAMP_PROVIDER=fake uv sync --locked` — exit 0.
+- `BOOTCAMP_PROVIDER=fake uv run ruff check .` — exit 0.
+- `BOOTCAMP_PROVIDER=fake uv run pytest` — exit 0; 42 passed in 0.34s.
+
+The workflow configures Python 3.11. These fake-provider checks verify offline
+behavior only; they do not measure live-model answer quality. No live provider,
+practice grader, or private questions were used. GitHub-hosted CodeQL results
+were not inspected here.
+
+The two retained P3 artifacts were compared on per-case answers, retrieved
+content, and grader dimensions; those inspected fields matched. The selected-
+case artifacts were also checked: baseline `fa-07` has two distinct answers
+across its repeats, and item-detail `fa-05` has two distinct answers with
+outcomes false/true/true. These artifact observations do not establish general
+determinism, answer correctness, or private-grader performance.
 
 ## What the system is
 
@@ -68,14 +89,8 @@ They are not automatically measurements of a later working tree.
 
 ### Offline tests
 
-The Phase A review reports:
-
-- 17 collected cases in `tests/test_contract.py`.
-- 23 collected cases across the full suite.
-- All cases passing at the reviewed checkout.
-
-Verify collection counts and actual test outcomes before updating the README.
-These tests establish controlled offline behavior, not live-model answer quality.
+The fresh full-suite result at the verification checkout was 42 passed. This
+is an offline FakeLLM/fake-provider result, not a live-model quality measure.
 
 ### Historical public practice report
 
@@ -118,10 +133,9 @@ The reported results are:
 | Corrected-source selected-case comparison | Baseline 3/6; item-detail 5/6 | Promising selected-case signal, not general validation |
 | P3 full public-set comparison | Baseline 5/10 with critical fail; item-detail 6/10 with critical pass | Public-practice regression evidence, not private-grader evidence |
 
-The Phase A review reports that P3 was repeated and that answers, retrievals,
-and grader outcomes were byte-identical between its two runs. This comparison
-claim must be checked against both complete artifacts before being presented
-as verified in updated documentation.
+The two retained P3 artifacts were compared directly. Their inspected per-case
+answers, retrieved content, and grader dimensions match. This finding applies
+only to these two artifacts and is not a claim of general determinism.
 
 P3 artifacts are retained under
 [`runs/public-prompt-comparison/`](../runs/public-prompt-comparison/).
@@ -183,36 +197,37 @@ relying only on a prose characterization.
 
 ## Documentation reconciliation checklist
 
-- [ ] Verify the reported test counts and passing outcomes.
-- [ ] Inspect both complete P3 artifacts and verify their comparison results.
-- [ ] Replace the README's stale "P3 is ready" wording with completed results
-      and the keep-baseline decision.
-- [ ] Replace the README's stale "16/16" test count with verified counts.
-- [ ] Correct the selected-case repeatability statement in `docs/extra.md`.
-- [ ] Link the current-state summary, accepted contract, and gap-closing plan
-      from the README.
+- [x] Verify the offline test-job commands and passing outcome at this checkout.
+- [x] Inspect both P3 artifacts and compare the recorded per-case fields.
+- [x] Replace stale README P3 wording and the old test count.
+- [x] Correct selected-case repeatability statements in `docs/extra.md`.
+- [x] Link the current-state summary, accepted contract, and gap-closing plan
+  from the README.
+
+A2 status: Documentation reconciliation reviewed locally; pending commit,
+push, and PR checks/review.
 
 ### Selected-case repeatability correction
 
-The corrected-source section of `docs/extra.md` reportedly states that answers
-were identical across repeats within each condition and task.
-
-The Phase A review identifies variation in:
+The corrected-source comparison artifacts establish variation in:
 
 - Item-detail `fa-05`: repeat 1 differs from repeats 2–3 and has a different
   `claim_support` outcome.
 - Baseline `fa-07`: repeat 1 differs from later repeats.
 
-Verify these differences against the controlled-case artifacts and replace
-the blanket identical-repeats claim.
+The updated `docs/extra.md` records these differences and the item-detail
+`fa-05` pass pattern (false/true/true), without conflating them with the P3
+artifact comparison.
 
-Keep this correction separate from the reported byte-identical P3 repeat.
+Keep this correction separate from the P3 comparison: its two artifacts matched
+on the inspected per-case answers, retrieved content, and grader dimensions.
 
 ## Remaining work
 
 Follow [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md) sequentially.
 
-- Phase A: reconcile evidence, record accepted scope, and correct documentation.
+- Phase A: Documentation reconciliation reviewed locally; pending commit,
+  push, and PR checks/review.
 - Phase B: add focused offline tests for accepted rules and known boundaries.
 - Phase C: fix demonstrated contract violations with the smallest appropriate
   changes.
