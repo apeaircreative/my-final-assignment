@@ -1,5 +1,7 @@
 # my-final-assignment
 
+[![Offline CI](https://github.com/apeaircreative/my-final-assignment/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/apeaircreative/my-final-assignment/actions/workflows/check.yml?query=branch%3Amain+event%3Apush)
+
 A source-grounded research assistant that answers developer questions from six versioned documents and refuses unsupported questions.
 
 ## The problem
@@ -145,14 +147,15 @@ run-shape decision and reversal condition.
 
 ## Measured results
 
-The project uses separate evaluation lanes for local contract behavior,
-provider-backed practice evaluation, and the historical before/after
-investigation. These results are not interchangeable measures of grounded-answer
-quality.
+The Offline CI badge reports the `check` workflow status for push runs on the
+destination repository's `main` branch. Offline checks use the fake provider
+and do not establish live-model answer quality. The practice-score job is
+informational. Historical provider-backed and before/after results below are
+not interchangeable measures of grounded-answer quality.
 
 | What | Model | Result |
 |---|---|---|
-| Offline test suite | Fake provider | **42 passed** in a fresh run on 2026-10-22; this verifies offline checks, not live-model answer quality. |
+| Offline test suite | Fake provider | **42 passed** in a fresh run on 2026-10-22. |
 | Public practice grader | Ollama `qwen2.5:7b-instruct` | **5/10 (50%)** in the preserved 2026-10-19 report; critical safety gate failed. Four grounded cases failed `claim_support`, and critical refusal case `fa-09` failed refusal gates. |
 | Top-k comparison, run 1 | Ollama `qwen2.5:7b-instruct-baseline` | k=3: 4/10, critical fail; k=4: 5/10, critical pass; k=5: 5/10, critical fail. Zero provider failures. [Artifact](runs/topk/topk_20261019T141256980988Z.json). |
 | Top-k comparison, reversed repeat | Same model tag and source hashes | k=5: 4/10, critical fail; k=4: 5/10, critical fail. Zero provider failures; critical `fa-05` and `fa-07` failed claim-support at both settings. [Artifact](runs/topk/topk_20261019T143804177172Z.json). |
