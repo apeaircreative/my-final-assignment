@@ -6,10 +6,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from agent import CORPUS_DIR
-from bootcamp_agent.documents import load_corpus
-from bootcamp_agent.retrieval import retrieve
+from bootcamp_agent.documents import load_corpus  # noqa: E402
+from bootcamp_agent.retrieval import retrieve  # noqa: E402
 
+from agent import CORPUS_DIR  # noqa: E402
 
 QUESTION = "Which layered defenses help against prompt injection in retrieved documents?"
 

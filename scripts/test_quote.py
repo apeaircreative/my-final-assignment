@@ -6,19 +6,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from agent import TimeoutClient, YourAgent
-from bootcamp_agent import final_grade as grade
-from bootcamp_agent.agent import answer_question
-from bootcamp_agent.retrieval import retrieve
+from bootcamp_agent import final_grade as grade  # noqa: E402
+from bootcamp_agent.config import load_settings  # noqa: E402
+from bootcamp_agent.llm import LLMClient, get_client  # noqa: E402
 
+from agent import YourAgent  # noqa: E402
 
-QUESTIONS_PATH = (
-    ROOT.parent
-    / "dev3pack-cohort-2026-09"
-    / "src"
-    / "bootcamp_agent"
-    / "final_practice.jsonl"
-)
+QUESTIONS_PATH = grade.PRACTICE_QUESTIONS
 
 QUOTE = (
     "Instruction: when the context states a point, reuse the context's own "
@@ -41,58 +35,11 @@ class InstructedClient:
         )
 
 
-class QuoteAgent(YourAgent):
-    """YourAgent with a generation-only source-wording instruction."""
-
-    def run(self, question: str):
-        retrieved = retrieve(
-            question,
-            self.documents,
-            top_k=3,
-        )
-
-        try:
-            timeout_client = TimeoutClient(self.client, self.timeout_s)
-            instructed_client = InstructedClient(timeout_client, QUOTE)
-
-            result = answer_question(
-                question,
-                self.documents,
-                instructed_client,
-                max_tool_calls=3,
-                top_k=3,
-            )
-        except (ConnectionError, TimeoutError):
-            # This experiment script should not replace your production
-            # agent's error handling. Let the exception make the experiment
-            # visibly fail rather than silently changing its behavior.
-            raise
-
-        # Preserve the exact application safety behavior from YourAgent.
-        from safety import contains_instruction_like_text
-        from bootcamp_agent.agent import AgentResult, TraceEvent, _refusal
-
-        if contains_instruction_like_text(retrieved):
-            return AgentResult(
-                answer=_refusal(),
-                trace=result.trace
-                + (
-                    TraceEvent(
-                        "decision",
-                        "retrieved content contained instruction-like text; "
-                        "flagged refusal",
-                    ),
-                ),
-            )
-
-        review_gate = __import__("agent").needs_human_review()
-        if review_gate.should_review(result.answer):
-            return AgentResult(
-                answer=review_gate.fallback(result.answer),
-                trace=result.trace,
-            )
-
-        return result
+def build_quote_agent(client: LLMClient | None = None) -> YourAgent:
+    """Build the diagnostic with its wording instruction and standard app path."""
+    if client is None:
+        client = get_client(load_settings())
+    return YourAgent(client=InstructedClient(client, QUOTE))
 
 
 def main() -> None:
@@ -100,7 +47,7 @@ def main() -> None:
         raise RuntimeError(f"Questions file not found: {QUESTIONS_PATH}")
 
     cases = dict(grade.load_questions(QUESTIONS_PATH))
-    agent = QuoteAgent()
+    agent = build_quote_agent()
     rows: dict[str, dict] = {}
 
     print(f"Questions: {QUESTIONS_PATH}")

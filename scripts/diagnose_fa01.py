@@ -6,27 +6,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from agent import YourAgent
-from bootcamp_agent import final_grade as grade
-from bootcamp_agent.retrieval import retrieve
+from bootcamp_agent import final_grade as grade  # noqa: E402
+from bootcamp_agent.retrieval import retrieve  # noqa: E402
 
+from agent import YourAgent  # noqa: E402
 
-QUESTIONS_PATH = (
-    ROOT.parent
-    / "dev3pack-cohort-2026-09"
-    / "src"
-    / "bootcamp_agent"
-    / "final_practice.jsonl"
-)
+QUESTIONS_PATH = grade.PRACTICE_QUESTIONS
 
 
 def main() -> None:
     if not QUESTIONS_PATH.is_file():
         raise RuntimeError(
             "Could not find final_practice.jsonl.\n"
-            f"Looked for: {QUESTIONS_PATH}\n"
-            "Update QUESTIONS_PATH near the top of this script to the location "
-            "of src/bootcamp_agent/final_practice.jsonl."
+            f"Expected the installed course package at: {QUESTIONS_PATH}"
         )
 
     cases = dict(grade.load_questions(QUESTIONS_PATH))
@@ -117,7 +109,7 @@ def main() -> None:
     retrieved = retrieve(
         case.question,
         agent.documents,
-        top_k=3,
+        top_k=agent.top_k,
     )
 
     for rank, scored in enumerate(retrieved, 1):

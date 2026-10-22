@@ -1,0 +1,80 @@
+{
+  "schema": "my-final-assignment.heldout-review-set.v1",
+  "description": "Exploratory questions authored independently from the public practice cases. Review references are for human evaluation only and are not sent to the model.",
+  "cases": [
+    {
+      "id": "loop-duplicate-call",
+      "question": "How should an agent handle a repeated tool call with the same arguments, and what other limits should keep its loop bounded?",
+      "review_reference": {
+        "source_ids": ["agent-loops"],
+        "key_points": [
+          "Detect the repeated tool call with identical arguments and stop the loop.",
+          "Use a maximum tool-call, token, or wall-clock budget.",
+          "When a budget is exhausted, stop in a defined state rather than silently truncating."
+        ]
+      }
+    },
+    {
+      "id": "rag-failure-diagnosis",
+      "question": "A RAG answer is wrong. What should be checked first, and how should the remedy depend on whether the needed passage was in the prompt?",
+      "review_reference": {
+        "source_ids": ["rag-basics"],
+        "key_points": [
+          "First check whether the answer-bearing passage reached the prompt.",
+          "If retrieval missed it, investigate chunking, the index, or the query.",
+          "If the passage was present, investigate generation, instructions, formatting, or context use."
+        ]
+      }
+    },
+    {
+      "id": "mcp-boundary",
+      "question": "What is the difference between a tool, a skill, and an MCP server, and what should be considered before connecting one?",
+      "review_reference": {
+        "source_ids": ["mcp-overview"],
+        "key_points": [
+          "A tool is a callable capability that executes.",
+          "A skill packages instructions for a workflow but does not itself execute.",
+          "An MCP server exposes tools, resources, and prompts through a protocol boundary.",
+          "Treat server connection as a security boundary; prefer read-only access and protect credentials."
+        ]
+      }
+    },
+    {
+      "id": "evaluation-design",
+      "question": "What should a small but useful LLM evaluation set contain, and how should a proposed change be compared?",
+      "review_reference": {
+        "source_ids": ["evaluation-basics"],
+        "key_points": [
+          "Use a fixed labeled set with expected properties rather than exact answers only.",
+          "Include unhappy paths such as unsupported and adversarial cases.",
+          "Prefer code checks for mechanical properties and inspect fuzzy judging.",
+          "Change one thing at a time and report regressions as well as improvements."
+        ]
+      }
+    },
+    {
+      "id": "structured-retry",
+      "question": "If a model returns malformed JSON, what should the application do, how often should it retry, and how should a second failure end?",
+      "review_reference": {
+        "source_ids": ["structured-outputs"],
+        "key_points": [
+          "The application parses and validates the model output strictly.",
+          "After the first parse failure, make one bounded corrective retry.",
+          "After a second failure, return a typed refusal with human review required."
+        ]
+      }
+    },
+    {
+      "id": "rag-index-tradeoff",
+      "question": "What does lexical indexing offer as a baseline, and what does embedding-based semantic search trade for improved paraphrase recall?",
+      "review_reference": {
+        "source_ids": ["rag-basics"],
+        "key_points": [
+          "Lexical retrieval is deterministic, inexpensive, and easy to debug.",
+          "Embedding-based semantic search can improve recall for paraphrased questions.",
+          "Semantic search adds a dependency and a failure mode that is less directly inspectable."
+        ]
+      }
+    }
+  ]
+}

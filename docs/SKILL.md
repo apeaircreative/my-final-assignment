@@ -21,13 +21,12 @@ implementation, tests, or recorded run.
 
 ## Workflow (`workflow`)
 
-## Workflow (`workflow`)
-
 1. Find the retrieval boundary: identify what documents or chunks can be
    retrieved and what content is sent to the agent's answer process.
 2. Check every code path that can send retrieved or document content to a
    model, tool, or final answer, not just the main `run()` path. For each path,
-   check whether the same safety check and tests apply.
+   check whether the same safety check and tests apply. Build a path inventory;
+   do not assume that finding one caller establishes coverage.
 3. Follow the retrieved content into each model context and separate source
    information from instructions the agent is allowed to follow.
 4. Check the code for a specific defense against instruction-like retrieved
@@ -39,6 +38,27 @@ implementation, tests, or recorded run.
 7. Record what the code and tests prove, then record what they do not prove.
    Do not treat a narrow test result as proof of complete security or coverage
    of every code path.
+8. For every discovered content-to-model/tool path, record its source,
+   destination, applicable defense, and test evidence. Explicitly mark missing
+   defenses or tests as gaps; do not silently omit an inconvenient path.
+
+### Path coverage checklist
+
+Search for all places that pass document, chunk, retrieval, summary, or
+user-derived content to a model or tool. Include indirect callers and helper
+functions. In this project, paths previously missed by an audit included
+`answer_with_state()` and the `summarize_document` tool; re-check whether those
+paths still exist and how they are wired rather than assuming this list is
+complete.
+
+Use a table like this in the audit:
+
+| Path / entry point | Content source → destination | Safety defense on this path | Test / observed evidence | Gap |
+|---|---|---|---|---|
+| `YourAgent.run()` | Retrieved chunks → answer pipeline | Name only the defenses actually applied | Test and trace identifiers | Explicit gap or `None observed` |
+
+Do not label a path as protected merely because another path has a similar
+check. Follow the actual calls and data flow.
 
 ## Output format (`output_format`)
 
@@ -84,28 +104,33 @@ all prompt-injection techniques.
 
 ## Evidence
 
+The following is a historical example from the session 10 exercise, not a
+claim about the current repository state. Re-verify all code and tests before
+reusing any observation.
+
 ### Without the skill (`without_skill`)
 
-> The current application detector case-folds retrieved chunk text and looks only for the literal substring "ignore previous instructions." 
-> After the`answer pipeline` returns, a match causes `YourAgent` to replace its result with the flagged refusal.
+> The application detector case-folded retrieved chunk text and checked for
+> configured instruction-like patterns. After the answer pipeline returned, a
+> match caused `YourAgent` to replace its result with a flagged refusal.
 
 ### With the skill (`with_skill`)
 
-The skill produced a clear, focused audit of the retrieved-content boundary.
-It treated retrieved corpus text as untrusted data instead of instructions to
-follow. It also separated the quoted prompt-injection example in the corpus
-from the direct injection attempt used by the test fixture.
+The skill produced a focused audit of the retrieved-content boundary. It
+treated retrieved corpus text as untrusted data instead of instructions to
+follow, and separated the quoted prompt-injection example in the corpus from
+the direct injection attempt used by the test fixture.
 
 The audit found that the application uses a prompt instruction and a
 post-answer detector. It correctly limited the detector finding to the exact
 phrase `"ignore previous instructions"`. It also noted that the current tests
 do not prove protection against other prompt-injection wording.
 
-The run did not find every model-facing path found in the no-skill audit,
-including the `answer_with_state()` path and the `summarize_document` tool.
-This shows that the skill improved how the evidence was organized and how
-retrieved text was treated, but it did not guarantee that every code path
-would be checked.
+The run did not find every model-facing path, including `answer_with_state()`
+and the `summarize_document` tool. This shows that a clear audit narrative is
+not proof of complete path coverage. The path coverage checklist above is
+intended to make this failure visible and actionable; it still requires the
+auditor to search and verify the current code.
 
 
 ### The instruction you fixed (`improved_instruction`)

@@ -6,18 +6,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from agent import YourAgent
-from bootcamp_agent import final_grade as grade
-from bootcamp_agent.retrieval import retrieve
+from bootcamp_agent import final_grade as grade  # noqa: E402
+from bootcamp_agent.retrieval import retrieve  # noqa: E402
 
+from agent import YourAgent  # noqa: E402
 
-QUESTIONS_PATH = (
-    ROOT.parent
-    / "dev3pack-cohort-2026-09"
-    / "src"
-    / "bootcamp_agent"
-    / "final_practice.jsonl"
-)
+QUESTIONS_PATH = grade.PRACTICE_QUESTIONS
 
 
 def main() -> None:
@@ -81,7 +75,7 @@ def main() -> None:
     retrieved = retrieve(
         case.question,
         agent.documents,
-        top_k=4,
+        top_k=agent.top_k,
     )
 
     for rank, scored in enumerate(retrieved, 1):
