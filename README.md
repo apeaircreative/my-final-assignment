@@ -155,7 +155,7 @@ not interchangeable measures of grounded-answer quality.
 
 | What | Model | Result |
 |---|---|---|
-| Offline test suite | Fake provider | **42 passed** in a fresh run on 2026-10-22. |
+| Offline test suite | Fake provider | **42 passed** at pushed PR revision `3acc09e` on 2026-10-22; historical result before the quote-diagnostic regression test. |
 | Public practice grader | Ollama `qwen2.5:7b-instruct` | **5/10 (50%)** in the preserved 2026-10-19 report; critical safety gate failed. Four grounded cases failed `claim_support`, and critical refusal case `fa-09` failed refusal gates. |
 | Top-k comparison, run 1 | Ollama `qwen2.5:7b-instruct-baseline` | k=3: 4/10, critical fail; k=4: 5/10, critical pass; k=5: 5/10, critical fail. Zero provider failures. [Artifact](runs/topk/topk_20261019T141256980988Z.json). |
 | Top-k comparison, reversed repeat | Same model tag and source hashes | k=5: 4/10, critical fail; k=4: 5/10, critical fail. Zero provider failures; critical `fa-05` and `fa-07` failed claim-support at both settings. [Artifact](runs/topk/topk_20261019T143804177172Z.json). |
@@ -321,5 +321,5 @@ The repository is based on the Dev3Pack final-assignment template and course pac
 | `scripts/compare_heldout_prompts.py` | Sequential baseline/item-detail comparison on source-anchored review questions |
 | `scripts/compare_public_prompts.py` | Paired full public-practice grader regression with explicit Ollama options |
 | `data/evals/heldout_item_detail.json` | Exploratory held-out prompts and human-only source review criteria |
-| `data/evals/heldout_item_detail_p2.json` | Fresh candidate P2 review set; review and freeze before running |
+| `data/evals/heldout_item_detail_p2.json` | Consumed P2 review set; do not reuse for prompt tuning |
 | `.github/skills/retrieved-content-safety-audit/SKILL.md` | Copilot-discoverable retrieved-content audit workflow |

@@ -1,13 +1,13 @@
 # Current state of the project
 ---
 
-Status: Documentation reconciliation reviewed locally; pending commit, push, and PR checks/review.
+Status: A2 documentation reconciliation, commit, push, and required CI checks completed; final PR review and CodeQL follow-up pending.
 Reviewed: 2026-10-22
 Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
-Verification base checkout, before this uncommitted documentation patch:
+Verification base checkout (historical; 2026-10-22, before the A2 documentation patch):
 `593eb10eab7273e3f55408233588db646081062b`
-Verification status: test-job offline checks passed on 2026-10-22; A2 remains
-pending review of the documentation patch.
+Verification status: A2 documentation reconciliation, commit, push, and required
+PR checks completed; final PR review and CodeQL follow-up remain pending.
 
 ---
 
@@ -15,7 +15,7 @@ This document consolidates the project's state, accepted decisions, and
 verification performed at the checkout above. It does not establish that every
 requirement is implemented or verified.
 
-## Verification before documentation patch
+## Historical verification before A2 documentation patch
 
 On 2026-10-22, the offline test-job commands from
 [`.github/workflows/check.yml`](../.github/workflows/check.yml) were run at
@@ -30,6 +30,12 @@ The workflow configures Python 3.11. These fake-provider checks verify offline
 behavior only; they do not measure live-model answer quality. No live provider,
 practice grader, or private questions were used. GitHub-hosted CodeQL results
 were not inspected here.
+
+The 42-pass result above is historical for this base checkout. At the current
+local review worktree, after adding the quote-diagnostic regression test,
+`BOOTCAMP_PROVIDER=fake uv run ruff check .` passed and
+`BOOTCAMP_PROVIDER=fake uv run pytest` reported 43 passed. These local results
+do not update the historical run records or imply additional PR CI.
 
 The two retained P3 artifacts were compared on per-case answers, retrieved
 content, and grader dimensions; those inspected fields matched. The selected-
@@ -204,8 +210,8 @@ relying only on a prose characterization.
 - [x] Link the current-state summary, accepted contract, and gap-closing plan
   from the README.
 
-A2 status: Documentation reconciliation reviewed locally; pending commit,
-push, and PR checks/review.
+A2 status: Documentation reconciliation, commit, push, and required CI checks
+completed; final PR review and CodeQL follow-up pending.
 
 ### Selected-case repeatability correction
 
@@ -226,8 +232,8 @@ on the inspected per-case answers, retrieved content, and grader dimensions.
 
 Follow [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md) sequentially.
 
-- Phase A: Documentation reconciliation reviewed locally; pending commit,
-  push, and PR checks/review.
+- Phase A: A2 documentation reconciliation, commit, push, and required CI checks
+  completed; final PR review and CodeQL follow-up pending.
 - Phase B: add focused offline tests for accepted rules and known boundaries.
 - Phase C: fix demonstrated contract violations with the smallest appropriate
   changes.

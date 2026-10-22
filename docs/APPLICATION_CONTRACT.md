@@ -1,7 +1,7 @@
 # Application contract
 ---
 
-Status: accepted decisions; implementation verification pending
+Status: Q1–Q4 verification is recorded per rule below; B5/B6 reliability work and live-model quality remain unverified. A passing full suite alone does not establish every contract guarantee.
 Decision date: 2026-10-21
 Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
 

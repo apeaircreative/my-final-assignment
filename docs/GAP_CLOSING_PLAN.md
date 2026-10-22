@@ -80,7 +80,7 @@ The repository contains one unambiguous statement of the accepted rules.
 
 ### A2 — Reconcile reported results
 
-Status: Documentation reconciliation reviewed locally; pending commit, push, and PR checks/review.
+Status: A2 documentation reconciliation, commit, push, and required CI checks completed; final PR review and CodeQL follow-up pending.
 
 Tasks:
 
@@ -367,9 +367,9 @@ integration test verifies the returned result, not prevention of model
 exposure or comprehensive injection resistance. No live model, grader,
 production behavior, or corpus changes occurred.
 
-The planned offline implementation/verification tasks for Q1–Q4 (B1–B4) are
-complete. This does not complete Phase A A2 or reliability tasks B5/B6: A2
-remains pending verification, and B5/B6 remain pending as separately listed.
+The planned offline implementation/verification tasks for Q1–Q4 (B1–B4) and
+Phase A A2 are complete. Reliability tasks B5/B6 remain pending as separately
+listed; final PR review and CodeQL follow-up are also pending.
 
 Reviewed: 2026-10-21.
 

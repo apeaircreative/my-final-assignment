@@ -36,6 +36,7 @@ from bootcamp_agent.tools import Tool
 import agent as application
 from agent import MemoryStore, PromptExtensionClient, SessionState, YourAgent, answer_with_state
 from safety import contains_instruction_like_text
+from scripts.test_quote import QUOTE, build_quote_agent
 
 SUPPORTED = "How does chunking work in RAG?"
 UNSUPPORTED = "What is the capital city of Mongolia?"
@@ -114,6 +115,37 @@ def test_prompt_extension_uses_real_line_breaks() -> None:
     assert system == f"base prompt\n{application.PROMPT_EXTENSION}"
     assert "\\n" not in system
     assert user == "question"
+
+
+def test_quote_diagnostic_uses_supported_agent_path() -> None:
+    class RecordingFakeLLM:
+        def __init__(self) -> None:
+            self.inner = FakeLLM(
+                default=_reply(
+                    "Chunking splits documents into passages at paragraph boundaries.",
+                    ["rag-basics"],
+                    review=False,
+                )
+            )
+            self.calls: list[tuple[str, str]] = []
+
+        def complete(self, system: str, user: str) -> str:
+            self.calls.append((system, user))
+            return self.inner.complete(system=system, user=user)
+
+    model = RecordingFakeLLM()
+    agent = build_quote_agent(model)
+
+    result = agent.run(SUPPORTED)
+
+    assert len(model.calls) == 1
+    assert f"\n\n{QUOTE}" in model.calls[0][1]
+    assert (
+        result.answer.answer
+        == "Chunking splits documents into passages at paragraph boundaries."
+    )
+    assert result.answer.citations == ("rag-basics",)
+    assert not result.answer.needs_human_review
 
 
 # ------------------------------------------------ a question the corpus does not answer
