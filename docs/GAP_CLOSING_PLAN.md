@@ -377,9 +377,10 @@ records accessible evidence and its limits.
 
 ### B5 — Failure during parse repair
 
-Status: pending execution. B4's recorded 2026-10-21 review satisfies the
-B4-review prerequisite; this dependency was reconciled on 2026-10-26.
-B5 completion and review remain required before B6.
+Status: violation demonstrated; controlled characterization executed and
+desired diagnostic target approved on 2026-10-26. Local diff review
+completed; PR validation and integration remain pending.
+No production correction is included.
 
 Reliability target:
 
@@ -400,6 +401,65 @@ Tasks:
 Completion condition:
 
 An executable case establishes the behavior and any trace-fidelity violation.
+
+
+### Outcome — B5 characterization, 2026-10-26
+
+Status: violation demonstrated; desired diagnostic target approved.
+Local diff review completed; PR validation and integration remain pending.
+
+Verification base:
+`5d079d2426013d9392377b1da24cde1ff987ae1b`, with uncommitted B5 test changes
+in `tests/test_contract.py`. These changes were not part of the base commit.
+
+Evidence observed at `2026-10-26T19:04:21Z`:
+
+- The controlled client returned malformed output on the first call.
+- Exactly two calls occurred; the second received the pipeline's repair
+  instruction and raised `ConnectionError`.
+- The supported application path returned the standard flagged refusal.
+- Returned trace:
+  `retrieve` -> `llm_call: provider call failed: ConnectionError` ->
+  `decision: provider call failed; flagged refusal`.
+- The returned trace omitted the initial completion and the parse-failure
+  decision that triggered repair. Source inspection shows that the
+  application exception handler constructs a replacement trace after the
+  pipeline exits with an exception.
+
+Initial verification:
+
+- Focused characterization: 1 passed.
+- Full offline suite: 44 passed in 0.64s.
+- Ruff: passed.
+- Initial diff check reported a trailing blank line in the added test.
+  Whitespace was subsequently normalized.
+
+Final local verification observed at `2026-10-26T19:10:59Z`, against
+the same base revision with the B5 working-tree changes:
+
+- Focused characterization: 1 passed.
+- Full offline suite: 44 passed in 0.34s.
+- Ruff: passed.
+- `git diff --check`: passed.
+- Local diff review: limited to the characterization test and its
+  roadmap/issue documentation; no production changes.
+
+Approved desired behavior:
+
+Preserve enough truthful, ordered execution history to distinguish the
+initial completion, parse failure and repair decision, failed repair call,
+and final refusal. This does not prescribe exactly five events, specific
+event names, or retention of raw prompts and responses.
+
+Scope and remaining limitations:
+
+- The passing characterization records a demonstrated gap; it does not fix it.
+- No production code, dependency, corpus, or accepted answer policy changed.
+- Any correction requires separate Phase C approval and compatibility review.
+- No live model or grader was run locally for this characterization.
+- Live-model quality, private-grader performance, timeout cancellation,
+  and concurrent-provider safety are not established by this result.
+- B6 remains dependent on B5 completion and review.
 
 ### B6 — Timeout boundaries
 
