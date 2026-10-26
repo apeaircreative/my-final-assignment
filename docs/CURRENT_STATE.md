@@ -1,7 +1,7 @@
 # Current state of the project
 ---
 
-Status: Phase A complete; B1–B4 documented as passed; B5/B6 pending.
+Status: Phase A complete; B1–B4 documented as passed; B5 characterization integrated; B6 local characterization passed, with local review complete; PR validation and integration pending. No B5/B6 production correction is included.
 Status reconciled: 2026-10-26
 Reviewed: 2026-10-22
 Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
@@ -274,9 +274,11 @@ on the inspected per-case answers, retrieved content, and grader dimensions.
 Follow [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md) sequentially.
 
 - Phase A: complete; milestone #1 is closed. See the dated evidence above.
-- Phase B: B1–B4 are documented as passed. B5 trace characterization remains
-  pending execution; B4's recorded review satisfies its prerequisite.
-  B6 timeout characterization follows B5 completion and review.
+- Phase B: B1–B4 are documented as passed. B5 / issue #6 characterization
+  is integrated in merge `23023a6d4713b89d84d4bb93fdcb1e0194afa009`;
+  its trace-fidelity gap remains unresolved. B6 / issue #7 local timeout
+  characterization passed; final review and PR integration remain pending.
+  See the plan for revision-specific evidence and lifecycle limitations.
 - Phase C: fix demonstrated contract violations with the smallest appropriate
   changes.
 - Subsequent quality evaluation: use a freshly frozen protocol before

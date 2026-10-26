@@ -379,7 +379,9 @@ records accessible evidence and its limits.
 
 Status: violation demonstrated; controlled characterization executed and
 desired diagnostic target approved on 2026-10-26. Local diff review
-completed; PR validation and integration remain pending.
+completed. Subsequent integration: PR #10 merged as
+`23023a6d4713b89d84d4bb93fdcb1e0194afa009`; B5 / issue #6
+completion and review satisfy B6's prerequisite.
 No production correction is included.
 
 Reliability target:
@@ -406,7 +408,8 @@ An executable case establishes the behavior and any trace-fidelity violation.
 ### Outcome — B5 characterization, 2026-10-26
 
 Status: violation demonstrated; desired diagnostic target approved.
-Local diff review completed; PR validation and integration remain pending.
+Local diff review completed. Subsequent integration: PR #10 merged as
+`23023a6d4713b89d84d4bb93fdcb1e0194afa009`; B5 / issue #6 is complete.
 
 Verification base:
 `5d079d2426013d9392377b1da24cde1ff987ae1b`, with uncommitted B5 test changes
@@ -459,11 +462,17 @@ Scope and remaining limitations:
 - No live model or grader was run locally for this characterization.
 - Live-model quality, private-grader performance, timeout cancellation,
   and concurrent-provider safety are not established by this result.
-- B6 remains dependent on B5 completion and review.
+- B5 completion and review subsequently satisfied B6's prerequisite;
+  see the integration update above.
 
 ### B6 — Timeout boundaries
 
-Status: pending B5 review
+Status: controlled characterization passed; local test and documentation
+review completed. PR validation and integration remain pending.
+B5 / issue #6 completion and review satisfy the prerequisite; its merged
+characterization is present in base revision
+`23023a6d4713b89d84d4bb93fdcb1e0194afa009`.
+No production correction is included.
 
 Tasks:
 
@@ -476,6 +485,99 @@ Completion condition:
 
 Tests and documentation accurately describe the enforced boundary and the
 remaining lifecycle risk.
+
+### Outcome — B6 characterization, 2026-10-26
+
+Status: controlled characterization passed; local test and documentation
+review completed. PR validation and integration remain pending.
+
+Verification base:
+`23023a6d4713b89d84d4bb93fdcb1e0194afa009`, with the uncommitted B6
+characterization in `tests/test_contract.py`. The added test was not part
+of the base commit.
+
+Source inspection:
+
+- `TimeoutClient.complete()` starts a daemon provider worker and waits
+  using `worker.join(timeout=self.timeout_s)`.
+- If the worker remains alive after that wait, the wrapper raises
+  `TimeoutError`; the supported application path catches it and returns
+  a flagged refusal.
+- The configured timeout applies to each wrapped provider-call wait,
+  not to the entirety of `YourAgent.run()`.
+- The inspected timeout path does not attempt provider cancellation or
+  perform a subsequent join of the timed-out provider worker.
+
+Existing coverage:
+
+`test_timeout_on_a_hanging_provider_is_flagged_within_a_second` checks
+caller completion within a one-second test window with `timeout_s=0.2`,
+and a flagged refusal. It does not separately assert provider-operation
+completion.
+
+Added controlled evidence:
+
+`test_timeout_returns_before_controlled_provider_operation_completes`
+establishes that:
+
+- The provider invocation starts.
+- The caller returns within the one-second test window with the standard
+  flagged refusal and a `TimeoutError` provider-failure trace event.
+- The controlled provider operation remains incomplete at the post-return
+  observation, before explicit release.
+- After explicit release, the provider operation reaches its completion
+  signal within the bounded cleanup window.
+- The provider observes explicit release rather than defensive-wait expiry.
+
+The test releases the controlled provider in a `finally` block. Its
+provider wait and cleanup waits are bounded.
+
+Commands and actual outcomes:
+
+- Focused tests:
+  `BOOTCAMP_PROVIDER=fake uv run pytest tests/test_contract.py::test_timeout_on_a_hanging_provider_is_flagged_within_a_second tests/test_contract.py::test_timeout_returns_before_controlled_provider_operation_completes`
+  — 2 passed in 0.50s.
+- Full offline suite: `BOOTCAMP_PROVIDER=fake uv run pytest`
+  — 45 passed in 0.55s.
+- Lint: `BOOTCAMP_PROVIDER=fake uv run ruff check .`
+  — all checks passed.
+- Diff check: `git diff --check` — no diagnostics.
+- Initial results above preceded the supporting documentation edits.
+- Final verification after documentation/status reconciliation:
+  `BOOTCAMP_PROVIDER=fake uv run pytest` — 45 passed in 0.56s;
+  `BOOTCAMP_PROVIDER=fake uv run ruff check .` — all checks passed;
+  `git diff --check` — no diagnostics.
+- The final evidence-record wording was updated afterward; the test
+  and production code were unchanged.
+
+Changed files in this B6 work:
+
+- `tests/test_contract.py`
+- `docs/GAP_CLOSING_PLAN.md`
+- `docs/ISSUES.md`
+- `docs/APPLICATION_CONTRACT.md` — status reconciliation only.
+- `docs/CURRENT_STATE.md` — status reconciliation only.
+
+Evidence limits and remaining risks:
+
+- Caller return is distinct from provider-operation completion.
+- A timely refusal does not establish provider cancellation.
+- The provider completion signal does not establish internal worker-thread
+  termination or comprehensive resource cleanup.
+- Strict end-to-end timing guarantees, concurrent-provider safety, and
+  production resource impact remain unestablished.
+- The controlled continuation observation records a current limitation;
+  it is not a requirement to preserve that limitation after an approved fix.
+- No production correction, dependency change, corpus change, live-provider
+  call, or grader run is included.
+- No improved live-model quality or private-grader performance is claimed.
+- Any lifecycle correction requires separate Phase C approval.
+
+Reviewed: 2026-10-26 — complete test diff and supporting documentation
+diffs reviewed in the conversation; no blocking issue found.
+PR validation and integration remain pending.
+
+Commit: pending.
 
 ## Phase C — Demonstrated violations only
 
