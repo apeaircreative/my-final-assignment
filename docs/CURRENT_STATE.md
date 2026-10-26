@@ -47,7 +47,10 @@ Workflow evidence:
 - https://github.com/apeaircreative/my-final-assignment/actions/runs/39829635845
 - https://github.com/apeaircreative/my-final-assignment/actions/runs/40194532300
 
-No tests, live-model calls, or graders were run for this reconciliation.
+No tests, live-model calls, or graders were run locally for this
+documentation reconciliation. PR validation runs separately in GitHub
+Actions; its job status alone does not establish a live-model result
+or a practice-grader score.
 Historical verification results below retain their original revision and
 working-tree context. This update does not establish improved live-model
 or private-grader performance.
