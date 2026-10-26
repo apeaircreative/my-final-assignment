@@ -781,3 +781,52 @@ def test_regression_rank_1_of_the_issue_list() -> None:
     llm_event = result.trace[1]
     assert "provider" in llm_event.detail.lower()
     assert "error" in llm_event.detail.lower()
+
+
+def test_failed_parse_repair_trace_characterization() -> None:
+    """Record current trace loss; do not require preserving this limitation."""
+
+    class RepairFailureLLM:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, str]] = []
+            self.outcomes: list[str] = []
+
+        def complete(self, system: str, user: str) -> str:
+            self.calls.append((system, user))
+            if len(self.calls) == 1:
+                self.outcomes.append("returned malformed response")
+                return "{not valid JSON"
+            if len(self.calls) == 2:
+                self.outcomes.append("raised ConnectionError during repair")
+                raise ConnectionError("controlled repair failure")
+            raise AssertionError("Unexpected third provider call")
+
+    model = RepairFailureLLM()
+    result = YourAgent(client=model).run(SUPPORTED)
+
+    assert len(model.calls) == 2
+    assert model.outcomes == [
+        "returned malformed response",
+        "raised ConnectionError during repair",
+    ]
+
+    first_system, first_user = model.calls[0]
+    repair_system, repair_user = model.calls[1]
+    assert repair_system == first_system
+    assert repair_user == (
+        first_user
+        + "\n\nYour previous reply was not valid. Return ONLY the JSON object."
+    )
+    _assert_standard_refusal(result.answer)
+
+    events = [(event.kind, event.detail) for event in result.trace]
+    print("Controlled provider outcomes:", model.outcomes)
+    print("Returned trace:", events)
+
+    # Current replacement trace loses the initial completion and parse history.
+    # Revisit these assertions if a trace-preservation correction is approved.
+    assert [kind for kind, _ in events] == ["retrieve", "llm_call", "decision"]
+    assert events[0][1].startswith("top_k=4 -> ")
+    assert events[0][1] != "top_k=4 -> []"
+    assert events[1] == ("llm_call", "provider call failed: ConnectionError")
+    assert events[2] == ("decision", "provider call failed; flagged refusal")

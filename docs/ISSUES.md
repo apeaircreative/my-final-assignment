@@ -12,8 +12,21 @@ At least three rows. Ranks 1, 2, 3... with no gap and no tie: two issues ranked
 | 2 | Provider timeouts stop the agent from waiting but do not stop the underlying provider worker from running. | Repeated timeouts can leave provider work running after the agent has already refused, creating a resource-lifecycle risk that needs further evidence to establish its production impact. |
 | 3 | The Session 11 memory/retention contract is not fully demonstrated by the current implementation and test coverage. | It leaves a required course deliverable insufficiently demonstrated and makes the intended retention boundary harder to verify, but it does not currently block the core research-agent execution path. |
 
-## Rank 1, fixed
+## Rank 1 — Initial-call failure covered; repair-failure gap demonstrated
 
-- The fix: Preserve the retrieval trace and record the failed provider call before returning the flagged refusal.
-- The regression test: `test_regression_rank_1_of_the_issue_list` in `tests/test_contract.py`.
-- Before and after: see [EVAL_REPORT.md](EVAL_REPORT.md).
+- Existing fix: reconstruct retrieval, failed-provider-call, and refusal
+  decision events when a supported provider exception is caught.
+- Existing regression: `test_regression_rank_1_of_the_issue_list` in
+  `tests/test_contract.py` exercises failure on the initial provider call.
+- Historical before/after evidence: see [EVAL_REPORT.md](EVAL_REPORT.md).
+- B5 characterization on 2026-10-26 demonstrated that a malformed initial
+  response followed by a repair-provider exception returns the standard
+  refusal but loses the initial completion and parse-failure/repair history.
+- Controlled coverage:
+  `test_failed_parse_repair_trace_characterization` in
+  `tests/test_contract.py`. Its passing assertions record the current
+  limitation; they do not require preserving that limitation forever.
+- Approved diagnostic target: distinguish the initial completion, parse
+  failure and repair decision, failed repair call, and final refusal.
+  Exact event formatting and implementation require separate Phase C review.
+- No production correction for the repair-failure gap is included in B5.
