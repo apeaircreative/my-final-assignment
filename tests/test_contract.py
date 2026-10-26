@@ -830,3 +830,64 @@ def test_failed_parse_repair_trace_characterization() -> None:
     assert events[0][1] != "top_k=4 -> []"
     assert events[1] == ("llm_call", "provider call failed: ConnectionError")
     assert events[2] == ("decision", "provider call failed; flagged refusal")
+
+
+def test_timeout_returns_before_controlled_provider_operation_completes() -> None:
+    """Characterize caller return separately from provider-operation completion."""
+
+    class ControlledLLM:
+        def __init__(self) -> None:
+            self.started = threading.Event()
+            self.release = threading.Event()
+            self.completed = threading.Event()
+            self.released = False
+
+        def complete(self, system: str, user: str) -> str:
+            self.started.set()
+            try:
+                self.released = self.release.wait(10.0)
+                if not self.released:
+                    raise RuntimeError("Controlled provider release was not observed")
+                return _reply("A controlled late answer.", ["rag-basics"])
+            finally:
+                self.completed.set()
+
+    model = ControlledLLM()
+    agent = YourAgent(client=model)
+    agent.timeout_s = 0.2
+    outcome = {}
+
+    def run() -> None:
+        try:
+            outcome["result"] = agent.run(SUPPORTED)
+        except Exception as error:  # noqa: BLE001 - reported as a test failure below
+            outcome["error"] = error
+
+    caller = threading.Thread(target=run, daemon=True)
+    caller.start()
+    try:
+        caller.join(DEADLINE_S)
+        assert not caller.is_alive(), "Caller did not return within the test window"
+        assert model.started.is_set(), "Provider invocation did not start"
+        assert "error" not in outcome, outcome.get("error")
+        assert "result" in outcome
+
+        result = outcome["result"]
+        _assert_standard_refusal(result.answer)
+        assert any(
+            event.kind == "llm_call"
+            and event.detail == "provider call failed: TimeoutError"
+            for event in result.trace
+        )
+        assert not model.release.is_set()
+        assert not model.completed.is_set(), (
+            "Provider operation completed before the explicit release"
+        )
+    finally:
+        model.release.set()
+        operation_completed = model.completed.wait(2.0)
+        caller.join(2.0)
+
+    assert operation_completed, "Provider operation did not complete after release"
+    assert model.released, "Provider defensive wait expired before explicit release"
+    assert not caller.is_alive(), "Caller remained alive after cleanup"

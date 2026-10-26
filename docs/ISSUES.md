@@ -30,3 +30,26 @@ At least three rows. Ranks 1, 2, 3... with no gap and no tie: two issues ranked
   failure and repair decision, failed repair call, and final refusal.
   Exact event formatting and implementation require separate Phase C review.
 - No production correction for the repair-failure gap is included in B5.
+
+## Rank 2 — Caller timeout characterized; lifecycle risk remains
+
+- Source inspection: the timeout wrapper bounds its wait for each provider
+  invocation and raises `TimeoutError` when the worker remains alive.
+  The inspected path does not attempt cancellation or subsequently join
+  the timed-out provider worker.
+- Existing coverage:
+  `test_timeout_on_a_hanging_provider_is_flagged_within_a_second`.
+- B6 controlled coverage:
+  `test_timeout_returns_before_controlled_provider_operation_completes`.
+- The controlled caller returns the standard flagged refusal while the
+  provider operation remains incomplete. The operation reaches its
+  completion signal after explicit test release.
+- That signal does not prove internal worker-thread termination or
+  comprehensive resource cleanup.
+- A timely refusal is not proof of provider cancellation. Strict
+  end-to-end timing, concurrent-provider safety, and production resource
+  impact remain unestablished.
+- This is characterization, not a lifecycle fix. Any production correction
+  requires separately approved Phase C work.
+- Verification details and revision context are recorded under B6 in
+  [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md).

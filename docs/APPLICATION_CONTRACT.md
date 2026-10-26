@@ -1,7 +1,7 @@
 # Application contract
 ---
 
-Status: Q1–Q4 verification is recorded per rule below; B5/B6 reliability work and live-model quality remain unverified. A passing full suite alone does not establish every contract guarantee.
+Status: Q1–Q4 verification is recorded per rule below. B5 characterization is integrated; B6 local characterization passed, with local review complete; PR validation and integration pending. The B5 trace gap and B6 lifecycle limitations remain unresolved. Live-model quality remains unverified. A passing full suite alone does not establish every contract guarantee.
 Decision date: 2026-10-21
 Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
 
