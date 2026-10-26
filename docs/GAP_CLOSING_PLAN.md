@@ -64,7 +64,7 @@ before merging or committing to a branch expected to remain green.
 
 ### A1 — Record accepted decisions
 
-Status: decisions accepted; repository application pending
+Status: complete; accepted contract, README links, and AGENTS.md pointer are present in merged revision `9a076d4bd142d802a7fbb20ac6b2e5f0e39a82b2`.
 
 Tasks:
 
@@ -80,7 +80,7 @@ The repository contains one unambiguous statement of the accepted rules.
 
 ### A2 — Reconcile reported results
 
-Status: A2 documentation reconciliation, commit, push, and required CI checks completed; final PR review and CodeQL follow-up pending.
+Status: complete; documentation work merged in PR #1. Post-merge check and CodeQL workflows succeeded; final review and CodeQL follow-up are owner-reported complete. See CURRENT_STATE.md for dated evidence and limits.
 
 Tasks:
 
@@ -300,7 +300,7 @@ refuses with and without citation sanitization, while sanitization-only
 review with a surviving valid citation preserves the cleaned, low-confidence,
 flagged answer. Two parse failures preserve the course's canonical refusal
 without a provenance-failure decision. These are offline checks, not
-live-model quality evidence. Q4 boundary coverage remains pending.
+live-model quality evidence. At this historical verification point, Q4 boundary coverage remained pending; see the subsequent B4 outcome.
 
 Reviewed: 2026-10-21.
 
@@ -367,15 +367,19 @@ integration test verifies the returned result, not prevention of model
 exposure or comprehensive injection resistance. No live model, grader,
 production behavior, or corpus changes occurred.
 
-The planned offline implementation/verification tasks for Q1–Q4 (B1–B4) and
-Phase A A2 are complete. Reliability tasks B5/B6 remain pending as separately
-listed; final PR review and CodeQL follow-up are also pending.
-
 Reviewed: 2026-10-21.
+
+Status update — 2026-10-26: The planned offline implementation/verification
+tasks for Q1–Q4 (B1–B4) and Phase A A2 are complete. Reliability tasks B5/B6
+remain pending as separately listed. Final review and CodeQL follow-up are
+owner-reported complete; the dated reconciliation in CURRENT_STATE.md
+records accessible evidence and its limits.
 
 ### B5 — Failure during parse repair
 
-Status: pending B4 review
+Status: pending execution. B4's recorded 2026-10-21 review satisfies the
+B4-review prerequisite; this dependency was reconciled on 2026-10-26.
+B5 completion and review remain required before B6.
 
 Reliability target:
 
