@@ -1,19 +1,59 @@
 # Current state of the project
 ---
 
-Status: A2 documentation reconciliation, commit, push, and required CI checks completed; final PR review and CodeQL follow-up pending.
+Status: Phase A complete; B1–B4 documented as passed; B5/B6 pending.
+Status reconciled: 2026-10-26
 Reviewed: 2026-10-22
 Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
 Verification base checkout (historical; 2026-10-22, before the A2 documentation patch):
 `593eb10eab7273e3f55408233588db646081062b`
-Verification status: A2 documentation reconciliation, commit, push, and required
-PR checks completed; final PR review and CodeQL follow-up remain pending.
+Historical verification context: the checkout above predates the A2
+documentation patch. Current completion evidence is recorded below.
 
 ---
 
-This document consolidates the project's state, accepted decisions, and
-verification performed at the checkout above. It does not establish that every
-requirement is implemented or verified.
+This document consolidates project status, accepted decisions, and historical
+verification at the revisions identified in each section. The original
+reviewed baseline above is distinct from the selected pre-change evaluation
+baseline below. It does not establish that every requirement is implemented
+or verified.
+
+## Status reconciliation — 2026-10-26
+
+Evidence observed at `2026-10-26T18:19:59Z`:
+
+- Selected pre-change evaluation baseline:
+  `da5776412fe0c200201032726b7db4a2f0cce954`.
+  Local Git inspection confirmed it is an ancestor of the recorded merge.
+- PR #1 merged on 2026-10-22 at
+  `9a076d4bd142d802a7fbb20ac6b2e5f0e39a82b2`.
+  This is the merged revision, not automatically the final evaluation candidate.
+- Post-merge `check` run `39829635839` completed successfully.
+- CodeQL Advanced runs `39829635845` and `40194532300` completed successfully
+  at the same merged revision. Workflow success does not establish absence
+  of findings.
+- The owner reports final review and CodeQL follow-up complete.
+  The PR review API returned no formal review objects; this does not
+  establish that no review occurred. Code Scanning findings were not
+  independently inspected in this reconciliation.
+- Phase A milestone #1 is closed; Phase B milestone #2 is open.
+- The README links the current-state summary, application contract, and
+  gap-closing plan. The root AGENTS.md contains the contract-work pointer.
+
+Workflow evidence:
+
+- https://github.com/apeaircreative/my-final-assignment/pull/1
+- https://github.com/apeaircreative/my-final-assignment/actions/runs/39829635839
+- https://github.com/apeaircreative/my-final-assignment/actions/runs/39829635845
+- https://github.com/apeaircreative/my-final-assignment/actions/runs/40194532300
+
+No tests, live-model calls, or graders were run locally for this
+documentation reconciliation. PR validation runs separately in GitHub
+Actions; its job status alone does not establish a live-model result
+or a practice-grader score.
+Historical verification results below retain their original revision and
+working-tree context. This update does not establish improved live-model
+or private-grader performance.
 
 ## Historical verification before A2 documentation patch
 
@@ -31,8 +71,8 @@ behavior only; they do not measure live-model answer quality. No live provider,
 practice grader, or private questions were used. GitHub-hosted CodeQL results
 were not inspected here.
 
-The 42-pass result above is historical for this base checkout. At the current
-local review worktree, after adding the quote-diagnostic regression test,
+The 42-pass result above is historical for this base checkout. At the
+2026-10-22 local review worktree, after adding the quote-diagnostic regression test,
 `BOOTCAMP_PROVIDER=fake uv run ruff check .` passed and
 `BOOTCAMP_PROVIDER=fake uv run pytest` reported 43 passed. These local results
 do not update the historical run records or imply additional PR CI.
@@ -95,8 +135,9 @@ They are not automatically measurements of a later working tree.
 
 ### Offline tests
 
-The fresh full-suite result at the verification checkout was 42 passed. This
-is an offline FakeLLM/fake-provider result, not a live-model quality measure.
+The historical full-suite result at the pre-A2 verification checkout was
+42 passed. The later 2026-10-22 local review result was 43 passed, as recorded
+above. These are offline fake-provider results, not live-model quality measures.
 
 ### Historical public practice report
 
@@ -210,8 +251,8 @@ relying only on a prose characterization.
 - [x] Link the current-state summary, accepted contract, and gap-closing plan
   from the README.
 
-A2 status: Documentation reconciliation, commit, push, and required CI checks
-completed; final PR review and CodeQL follow-up pending.
+A2 status: complete. See the dated status reconciliation above for merge,
+workflow, owner-reported review, and CodeQL evidence limits.
 
 ### Selected-case repeatability correction
 
@@ -232,9 +273,10 @@ on the inspected per-case answers, retrieved content, and grader dimensions.
 
 Follow [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md) sequentially.
 
-- Phase A: A2 documentation reconciliation, commit, push, and required CI checks
-  completed; final PR review and CodeQL follow-up pending.
-- Phase B: add focused offline tests for accepted rules and known boundaries.
+- Phase A: complete; milestone #1 is closed. See the dated evidence above.
+- Phase B: B1–B4 are documented as passed. B5 trace characterization remains
+  pending execution; B4's recorded review satisfies its prerequisite.
+  B6 timeout characterization follows B5 completion and review.
 - Phase C: fix demonstrated contract violations with the smallest appropriate
   changes.
 - Subsequent quality evaluation: use a freshly frozen protocol before

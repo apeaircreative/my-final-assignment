@@ -177,8 +177,9 @@ The pinned course result may not preserve the distinction between:
 - Review originally requested by the model.
 - Review introduced only during citation sanitization.
 
-Phase B must inspect what the interface exposes and construct controlled
-mixed cases before selecting a fix.
+The B3 investigation inspected the interface and exercised controlled mixed
+cases. Its recorded outcome and the verification section below describe the
+implemented observation approach and its limits.
 
 Do not promise a structured-reason solution until its compatibility with
 the pinned interface has been established.
@@ -219,7 +220,8 @@ parsed review boolean. It is request-scoped and sits outside `TimeoutClient`.
 Successive-run tests verify outcomes; request-local construction is also
 established by code inspection. These offline tests do not establish timeout
 cancellation, concurrent-provider safety, or live-model quality. Q4 boundary
-coverage remains pending.
+coverage was pending at this historical verification point; see Q4's
+subsequent verification record below.
 
 ## Q4 — Retrieved-content instruction check
 
