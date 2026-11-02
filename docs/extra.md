@@ -6,9 +6,21 @@ This document records a focused investigation into the retrieval architecture of
 
 The final assignment remains on the course-provided lexical retrieval baseline. This investigation does **not** authorize an architecture change. Any future retrieval change should be supported by independent evaluation evidence and, where appropriate, a separate ADR.
 
-**Investigation guide:** [Interpretation of the preserved 5/10 result](#what-the-preserved-510-means) · [Top-k comparison and subsequent experiments](#top-k-comparison-completed-run) · [R&D priority matrix](#rd-priority-matrix) · [Prompt-comparison findings](#p1-source-audit-of-the-held-out-comparison)
+## At a glance
 
-**Prompt decision:** Keep the baseline prompt as the default for now.
+- **Retrieval architecture:** The final assignment remains on the course-provided lexical retrieval baseline; this investigation does not authorize an architecture change.
+- **Retrieval coverage:** In the independent 12-question sample, 11 intended answer-bearing passages appeared in the top 3 (91.7% sample coverage), and one query still missed its intended passage at top 40. These figures describe this sample only, not general retrieval performance.
+- **Generated-answer evaluation:** The P1–P3 work separately examines answer content, source support, and public-practice grader behavior. Those checks are not the same as retrieval coverage. The combined evidence does not establish private-grader performance, general semantic claim-to-passage support, or generalization to unseen questions.
+- **Prompt decision:** Keep the baseline prompt as the default for now.
+
+## Navigate this investigation
+
+- [Interpretation of the preserved 5/10 result](#what-the-preserved-510-means)
+- [Top-k comparison and subsequent experiments](#top-k-comparison-completed-run)
+- [P1 source audit](#p1-source-audit-of-the-held-out-comparison)
+- [P2 paired comparison results](#p2-paired-comparison-results)
+- [P3 public-practice regression](#p3-full-public-practice-regression)
+- [R&D priority matrix](#rd-priority-matrix)
 
 ***
 
@@ -110,7 +122,6 @@ The investigation also distinguishes three different questions:
 
 The current evidence is strongest for the first question.
 
-The combined evidence does not establish private-grader performance, general semantic claim-to-passage support, or generalization to unseen questions.
 
 ***
 
@@ -492,11 +503,26 @@ established as stable. Keep the architecture fixed while interpreting the P1–P
 evidence so further changes do not confound that assessment. These findings are
 based on repository evidence, not a claim about private-grader performance.
 
-| Priority | Work | Rationale / source | Exit criteria | Status |
-|---|---|---|---|---|
-| **P1** | Audit the held-out answers claim by claim against the retrieved passages. | The [RAG guidance](../data/corpus/rag-basics.md) says to inspect whether the needed passage reached the prompt and separate retrieval from generation failure. The held-out artifact preserves both answers and passages. | Record supported claims, omissions, and overstatements for each answer; no model judge is authoritative. | Complete below. |
-| **P2** | Compare baseline and item-detail on a fresh, balanced, independently reviewed 8–20-case set. | [Evaluation guidance](../data/corpus/evaluation-basics.md) recommends a fixed labeled set, unhappy paths, and changing one thing at a time. | Same questions/settings in both conditions; review completeness, grounding, citations, refusal, adversarial behavior, and regressions. | Complete; findings below. |
-| **P3** | Run the complete public practice grader as a paired baseline/item-detail regression check before any prompt-adoption decision. | It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment. | Preserve both conditions and inspect critical safety/refusal, citations, and phrase-based results. | Complete; findings below. |
+**P1**
+
+- **Work:** Audit the held-out answers claim by claim against the retrieved passages.
+- **Rationale / source:** The [RAG guidance](../data/corpus/rag-basics.md) says to inspect whether the needed passage reached the prompt and separate retrieval from generation failure. The held-out artifact preserves both answers and passages.
+- **Exit criteria:** Record supported claims, omissions, and overstatements for each answer; no model judge is authoritative.
+- **Status:** Complete below.
+
+**P2**
+
+- **Work:** Compare baseline and item-detail on a fresh, balanced, independently reviewed 8–20-case set.
+- **Rationale / source:** [Evaluation guidance](../data/corpus/evaluation-basics.md) recommends a fixed labeled set, unhappy paths, and changing one thing at a time.
+- **Exit criteria:** Same questions/settings in both conditions; review completeness, grounding, citations, refusal, adversarial behavior, and regressions.
+- **Status:** Complete; findings below.
+
+**P3**
+
+- **Work:** Run the complete public practice grader as a paired baseline/item-detail regression check before any prompt-adoption decision.
+- **Rationale / source:** It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment.
+- **Exit criteria:** Preserve both conditions and inspect critical safety/refusal, citations, and phrase-based results.
+- **Status:** Complete; findings below.
 
 ### P1: source audit of the held-out comparison
 
@@ -625,8 +651,8 @@ citation-validation case. It also introduced an unsupported causal assurance
 in the chunking answer. Both conditions handled the unsupported and adversarial
 cases appropriately in these single samples. The structured-output answers
 remained incomplete. This is qualitative evidence, not a stable rate or causal
-finding. Keep the baseline prompt as the default for now; do not tune to this
-consumed P2 set.
+finding. Keep the baseline as default pending P3 and any future untouched
+review set; do not tune to this consumed P2 set.
 
 #### P3: full public practice regression
 
