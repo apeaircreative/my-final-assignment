@@ -1,7 +1,16 @@
 # Application contract
 ---
 
-Status: Q1–Q4 verification is recorded per rule below. B5 characterization is integrated; B6 local characterization passed, with local review complete; PR validation and integration pending. The B5 trace gap and B6 lifecycle limitations remain unresolved. Live-model quality remains unverified. A passing full suite alone does not establish every contract guarantee.
+**Current contract status**
+- Q1–Q4 verification is recorded per rule below.
+- B5/B6 controlled offline characterization is integrated; it does not establish
+  production corrections.
+- The B5 trace-fidelity gap and B6 provider-lifecycle limitations remain
+  unresolved.
+- Live-model quality remains unverified. A passing full suite alone does not
+  establish every contract guarantee.
+
+Status reconciled: 2026-11-02
 Decision date: 2026-10-21
 Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
 
@@ -17,6 +26,20 @@ satisfies them.
 For historical results, see [CURRENT_STATE.md](CURRENT_STATE.md).
 For sequential implementation and verification, see
 [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md).
+
+**How to read this contract**
+
+The Q1–Q4 sections below state accepted requirements, their rationale,
+limitations, and the revision-scoped verification records. Verification
+observations describe behavior at the identified revisions and worktree
+states; they do not silently amend the accepted requirements or establish
+current implementation behavior beyond that evidence.
+
+**Q1–Q4 overview**
+- [Q1 — Supported entry points](#q1--supported-entry-points)
+- [Q2 — Citation requirement](#q2--citation-requirement)
+- [Q3 — Review-to-refusal policy](#q3--review-to-refusal-policy)
+- [Q4 — Retrieved-content instruction check](#q4--retrieved-content-instruction-check)
 
 ## Terms
 
@@ -302,14 +325,25 @@ B5/B6 retain their separate statuses in the plan.
 
 ## Cross-cutting reliability verification
 
-In addition to Q1–Q4, verify:
+B5 and B6 have received controlled offline characterization. These observations
+record tested behavior; they do not establish production corrections.
 
-- The caller-waiting bound separately from provider-request cancellation.
-- The failure trace when the first response is malformed and the repair
-  call subsequently fails.
+- **B5 — Failed parse repair:** The controlled case returned the standard flagged
+  refusal after malformed initial output and a repair `ConnectionError`. The
+  replacement trace omitted the initial completion and parse-failure/repair
+  history. The trace-fidelity gap remains unresolved.
+- **B6 — Caller timeout and provider operation:** The caller returned a flagged
+  refusal while the controlled operation remained incomplete before explicit
+  release. After release, the operation reached its completion signal. This
+  does not establish provider cancellation, worker-thread termination,
+  comprehensive cleanup, concurrent-provider safety, strict end-to-end timing,
+  or production resource impact.
 
-These checks must describe actual guarantees without implying cancellation
-or complete trace preservation before those properties are demonstrated.
+Future verification must still examine the caller-waiting bound separately from
+provider-request cancellation and inspect the failure trace when malformed
+initial output is followed by a failed repair call. Describe only guarantees
+supported by the evidence. Revision-specific commands, outcomes, and limitations
+remain in [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md).
 
 ## Change and verification rules
 
