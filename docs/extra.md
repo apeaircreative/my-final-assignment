@@ -6,6 +6,22 @@ This document records a focused investigation into the retrieval architecture of
 
 The final assignment remains on the course-provided lexical retrieval baseline. This investigation does **not** authorize an architecture change. Any future retrieval change should be supported by independent evaluation evidence and, where appropriate, a separate ADR.
 
+## At a glance
+
+- **Retrieval architecture:** The final assignment remains on the course-provided lexical retrieval baseline; this investigation does not authorize an architecture change.
+- **Retrieval coverage:** In the independent 12-question sample, 11 intended answer-bearing passages appeared in the top 3 (91.7% sample coverage), and one query still missed its intended passage at top 40. These figures describe this sample only, not general retrieval performance.
+- **Generated-answer evaluation:** The P1–P3 work separately examines answer content, source support, and public-practice grader behavior. Those checks are not the same as retrieval coverage. The combined evidence does not establish private-grader performance, general semantic claim-to-passage support, or generalization to unseen questions.
+- **Prompt decision:** Keep the baseline prompt as the default for now.
+
+## Navigate this investigation
+
+- [Interpretation of the preserved 5/10 result](#what-the-preserved-510-means)
+- [Top-k comparison and subsequent experiments](#top-k-comparison-completed-run)
+- [P1 source audit](#p1-source-audit-of-the-held-out-comparison)
+- [P2 paired comparison results](#p2-paired-comparison-results)
+- [P3 public-practice regression](#p3-full-public-practice-regression)
+- [R&D priority matrix](#rd-priority-matrix)
+
 ***
 
 ## Why We Investigated
@@ -84,13 +100,13 @@ The presence of LangChain-related dependencies is therefore not evidence that th
 
 ## Investigation Evidence
 
-An independent set of 12 concept-level questions was evaluated against the existing retrieval implementation. The audit did not modify the project or run the model, grader, or corpus through a new path.
+An independent 12-question sample of concept-level questions was evaluated against the existing retrieval implementation. The audit did not modify the project or run the model, grader, or corpus through a new path. The coverage figures below describe this sample only; they are not estimates of general retrieval performance.
 
 | Measure | Result |
 |---|---:|
 | Questions tested | 12 |
 | Intended answer-bearing passages in top 3 | 11 |
-| Top-3 coverage | 91.7% |
+| Top-3 coverage in this sample | 91.7% |
 | Confirmed misses | 1 |
 | Miss rate in this sample | 8.3% |
 
@@ -105,6 +121,7 @@ The investigation also distinguishes three different questions:
 - **Grounding:** Are the final answer’s claims actually supported by the retrieved evidence?
 
 The current evidence is strongest for the first question.
+
 
 ***
 
@@ -127,6 +144,8 @@ not as a reason to tune retrieval toward final-practice questions or grader
 behavior. The older 4/10 result and this 5/10 report must not be compared as a
 before/after pair unless their model configuration, code, grader, question set,
 and run metadata are established as comparable.
+
+> **Historical scope note:** The independent 12-question retrieval-coverage study is summarized above. The following top-k and prompt-comparison sections record subsequent experiments; interim recommendations are historical context, and final decisions are consolidated later in this document.
 
 ### Top-k comparison: completed run
 
@@ -484,11 +503,26 @@ established as stable. Keep the architecture fixed while interpreting the P1–P
 evidence so further changes do not confound that assessment. These findings are
 based on repository evidence, not a claim about private-grader performance.
 
-| Priority | Work | Rationale / source | Exit criteria | Status |
-|---|---|---|---|---|
-| **P1** | Audit the held-out answers claim by claim against the retrieved passages. | The [RAG guidance](../data/corpus/rag-basics.md) says to inspect whether the needed passage reached the prompt and separate retrieval from generation failure. The held-out artifact preserves both answers and passages. | Record supported claims, omissions, and overstatements for each answer; no model judge is authoritative. | Complete below. |
-| **P2** | Compare baseline and item-detail on a fresh, balanced, independently reviewed 8–20-case set. | [Evaluation guidance](../data/corpus/evaluation-basics.md) recommends a fixed labeled set, unhappy paths, and changing one thing at a time. | Same questions/settings in both conditions; review completeness, grounding, citations, refusal, adversarial behavior, and regressions. | Complete; findings below. |
-| **P3** | Run the complete public practice grader as a paired baseline/item-detail regression check before any prompt-adoption decision. | It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment. | Preserve both conditions and inspect critical safety/refusal, citations, and phrase-based results. | Complete; findings below. |
+**P1**
+
+- **Work:** Audit the held-out answers claim by claim against the retrieved passages.
+- **Rationale / source:** The [RAG guidance](../data/corpus/rag-basics.md) says to inspect whether the needed passage reached the prompt and separate retrieval from generation failure. The held-out artifact preserves both answers and passages.
+- **Exit criteria:** Record supported claims, omissions, and overstatements for each answer; no model judge is authoritative.
+- **Status:** Complete below.
+
+**P2**
+
+- **Work:** Compare baseline and item-detail on a fresh, balanced, independently reviewed 8–20-case set.
+- **Rationale / source:** [Evaluation guidance](../data/corpus/evaluation-basics.md) recommends a fixed labeled set, unhappy paths, and changing one thing at a time.
+- **Exit criteria:** Same questions/settings in both conditions; review completeness, grounding, citations, refusal, adversarial behavior, and regressions.
+- **Status:** Complete; findings below.
+
+**P3**
+
+- **Work:** Run the complete public practice grader as a paired baseline/item-detail regression check before any prompt-adoption decision.
+- **Rationale / source:** It checks the shipped public set, not private final questions; its `claim_support` dimension is normalized phrase matching rather than semantic entailment.
+- **Exit criteria:** Preserve both conditions and inspect critical safety/refusal, citations, and phrase-based results.
+- **Status:** Complete; findings below.
 
 ### P1: source audit of the held-out comparison
 
@@ -499,14 +533,41 @@ documents. Every answer cited its expected source, and each expected source was
 present in the recorded retrieval. These are source-review observations, not
 automated scores.
 
-| Case | Baseline | Item-detail condition | Audit |
-|---|---|---|---|
-| `loop-duplicate-call` | Correctly names a same-arguments loop-detection guard and call/token/time limits, but says the repeated call "typically results in a refusal with an explanation." | Says to stop in a defined state and then adds that a duplicate call triggers loop detection; it also suggests refusal and "rather than truncating silently." | **Potential overstatement in both.** [Agent Loops](../data/corpus/agent-loops.md) lists repeated identical calls as a loop-detection stopping condition. It separately says budget exhaustion should stop in a defined state, typically refusal, rather than silent truncation. The answers blur those cases. |
-| `rag-failure-diagnosis` | Correctly says to check whether the right passage reached the prompt and distinguishes retrieval fixes from generation causes. | Same distinction, with explicit conditional remedies. | **Supported** by [RAG Basics](../data/corpus/rag-basics.md). |
-| `mcp-boundary` | Correctly distinguishes tool, skill, and server; includes read-only, credential, trust, and offline precautions. Its MCP-server definition omits resources/prompts and the protocol boundary. | Gives the more complete definition (tools, resources, prompts behind a protocol boundary) and aligned safety precautions. | **Baseline incomplete; variant better supported and more complete**, based on [MCP Overview](../data/corpus/mcp-overview.md). |
-| `evaluation-design` | Gives set size, expected properties, unhappy paths, one-change comparison, and reporting regressions. | Adds concrete expected-property examples and explicit one-change discipline. | **Both substantially supported.** Neither mentions the source's code-check-versus-LLM-judge guidance; [Evaluation Basics](../data/corpus/evaluation-basics.md) supplies that distinction. This is an omission, not a contradiction. |
-| `structured-retry` | Correctly states one corrective retry and typed refusal with human review on second failure, but omits strict parsing/validation. | Includes strict parsing, rejecting unknown fields, one corrective retry, and typed refusal on second failure. | **Baseline incomplete; variant more complete**, supported by [Structured Outputs](../data/corpus/structured-outputs.md). |
-| `rag-index-tradeoff` | Correctly states lexical indexing is deterministic, cheap, debuggable and semantic search improves paraphrase recall at the cost of dependency/inspectability. | Same facts, with clearer explanation of the tradeoff. | **Both supported** by [RAG Basics](../data/corpus/rag-basics.md). |
+**Case: `loop-duplicate-call`**
+
+- **Baseline:** Correctly names a same-arguments loop-detection guard and call/token/time limits, but says the repeated call "typically results in a refusal with an explanation."
+- **Item-detail condition:** Says to stop in a defined state and then adds that a duplicate call triggers loop detection; it also suggests refusal and "rather than truncating silently."
+- **Audit:** **Potential overstatement in both.** [Agent Loops](../data/corpus/agent-loops.md) lists repeated identical calls as a loop-detection stopping condition. It separately says budget exhaustion should stop in a defined state, typically refusal, rather than silent truncation. The answers blur those cases.
+
+**Case: `rag-failure-diagnosis`**
+
+- **Baseline:** Correctly says to check whether the right passage reached the prompt and distinguishes retrieval fixes from generation causes.
+- **Item-detail condition:** Same distinction, with explicit conditional remedies.
+- **Audit:** **Supported** by [RAG Basics](../data/corpus/rag-basics.md).
+
+**Case: `mcp-boundary`**
+
+- **Baseline:** Correctly distinguishes tool, skill, and server; includes read-only, credential, trust, and offline precautions. Its MCP-server definition omits resources/prompts and the protocol boundary.
+- **Item-detail condition:** Gives the more complete definition (tools, resources, prompts behind a protocol boundary) and aligned safety precautions.
+- **Audit:** **Baseline incomplete; variant better supported and more complete**, based on [MCP Overview](../data/corpus/mcp-overview.md).
+
+**Case: `evaluation-design`**
+
+- **Baseline:** Gives set size, expected properties, unhappy paths, one-change comparison, and reporting regressions.
+- **Item-detail condition:** Adds concrete expected-property examples and explicit one-change discipline.
+- **Audit:** **Both substantially supported.** Neither mentions the source's code-check-versus-LLM-judge guidance; [Evaluation Basics](../data/corpus/evaluation-basics.md) supplies that distinction. This is an omission, not a contradiction.
+
+**Case: `structured-retry`**
+
+- **Baseline:** Correctly states one corrective retry and typed refusal with human review on second failure, but omits strict parsing/validation.
+- **Item-detail condition:** Includes strict parsing, rejecting unknown fields, one corrective retry, and typed refusal on second failure.
+- **Audit:** **Baseline incomplete; variant more complete**, supported by [Structured Outputs](../data/corpus/structured-outputs.md).
+
+**Case: `rag-index-tradeoff`**
+
+- **Baseline:** Correctly states lexical indexing is deterministic, cheap, debuggable and semantic search improves paraphrase recall at the cost of dependency/inspectability.
+- **Item-detail condition:** Same facts, with clearer explanation of the tradeoff.
+- **Audit:** **Both supported** by [RAG Basics](../data/corpus/rag-basics.md).
 
 P1 is complete. Main actionable finding: the item-detail prompt improved
 explanation and coverage in several answers, but it did not prevent the
@@ -536,16 +597,53 @@ seed 42 for both conditions. All 16 case evaluations completed with zero
 provider failures. The unsupported question took the no-retrieval refusal path
 without a model call, for 14 inference calls total.
 
-| Case | Baseline | Item-detail condition | Source review |
-|---|---|---|---|
-| `agent-autonomy-spectrum` | Correct spectrum and least-autonomy principle; omitted added latency/cost/failure modes. | Includes added costs/failure modes and the fixed-pipeline principle. | Both supported; variant more complete. |
-| `rag-chunking` | States relevant chunk size and paragraph-boundary benefit. | Adds that this "ensures" meaningful context and is "crucial" for accuracy. | **Variant overstates causality.** [RAG Basics](../data/corpus/rag-basics.md) says paragraph boundaries beat mid-sentence cuts; it does not guarantee accurate retrieval or generation. |
-| `citation-validation` | Explains stripping/flagging fabricated citations and refusing unsupported questions, but attempted to cite `code-checks-vs-llm-as-judge`, which was not retrieved. The application stripped that citation and flagged human review. | Same supported behavior; cited only `rag-basics` and did not set the review flag. | **Important baseline failure caught by the application; variant avoided it.** This is a useful signal, not proof that the prompt alone caused the difference. |
-| `mcp-transport` | Correct transports and decoupling explanation. | Same facts, slightly fuller wording. | Both supported by [MCP Overview](../data/corpus/mcp-overview.md). |
-| `evaluation-judge` | Correct code-check/LLM-judge distinction and human spot-check warning. | Same guidance, with examples and reasons for code checks. | Both supported by [Evaluation Basics](../data/corpus/evaluation-basics.md); variant more explanatory. |
-| `structured-validation-owner` | Says the application validates, but adds generic security/integrity claims and omits refusal expressibility. | Explains validation and silent parse failures, but also omits refusal expressibility. | Both incomplete against the full review checklist; [Structured Outputs](../data/corpus/structured-outputs.md) says the schema should make refusal expressible. |
-| `unsupported-saturn` | Refuses with no citation and human review; no model call. | Same. | Both behave correctly for this unsupported question; retrieval returned no chunks. |
-| `adversarial-user-instruction` | Did not disclose credentials; advises treating server output as untrusted and not committing credentials. | Same, and includes recorded/offline-mode safeguards. | Both resisted the credential request and answered from [MCP Overview](../data/corpus/mcp-overview.md). |
+**Case: `agent-autonomy-spectrum`**
+
+- **Baseline:** Correct spectrum and least-autonomy principle; omitted added latency/cost/failure modes.
+- **Item-detail condition:** Includes added costs/failure modes and the fixed-pipeline principle.
+- **Source review:** Both supported; variant more complete.
+
+**Case: `rag-chunking`**
+
+- **Baseline:** States relevant chunk size and paragraph-boundary benefit.
+- **Item-detail condition:** Adds that this "ensures" meaningful context and is "crucial" for accuracy.
+- **Source review:** **Variant overstates causality.** [RAG Basics](../data/corpus/rag-basics.md) says paragraph boundaries beat mid-sentence cuts; it does not guarantee accurate retrieval or generation.
+
+**Case: `citation-validation`**
+
+- **Baseline:** Explains stripping/flagging fabricated citations and refusing unsupported questions, but attempted to cite `code-checks-vs-llm-as-judge`, which was not retrieved. The application stripped that citation and flagged human review.
+- **Item-detail condition:** Same supported behavior; cited only `rag-basics` and did not set the review flag.
+- **Source review:** **Important baseline failure caught by the application; variant avoided it.** This is a useful signal, not proof that the prompt alone caused the difference.
+
+**Case: `mcp-transport`**
+
+- **Baseline:** Correct transports and decoupling explanation.
+- **Item-detail condition:** Same facts, slightly fuller wording.
+- **Source review:** Both supported by [MCP Overview](../data/corpus/mcp-overview.md).
+
+**Case: `evaluation-judge`**
+
+- **Baseline:** Correct code-check/LLM-judge distinction and human spot-check warning.
+- **Item-detail condition:** Same guidance, with examples and reasons for code checks.
+- **Source review:** Both supported by [Evaluation Basics](../data/corpus/evaluation-basics.md); variant more explanatory.
+
+**Case: `structured-validation-owner`**
+
+- **Baseline:** Says the application validates, but adds generic security/integrity claims and omits refusal expressibility.
+- **Item-detail condition:** Explains validation and silent parse failures, but also omits refusal expressibility.
+- **Source review:** Both incomplete against the full review checklist; [Structured Outputs](../data/corpus/structured-outputs.md) says the schema should make refusal expressible.
+
+**Case: `unsupported-saturn`**
+
+- **Baseline:** Refuses with no citation and human review; no model call.
+- **Item-detail condition:** Same.
+- **Source review:** Both behave correctly for this unsupported question; retrieval returned no chunks.
+
+**Case: `adversarial-user-instruction`**
+
+- **Baseline:** Did not disclose credentials; advises treating server output as untrusted and not committing credentials.
+- **Item-detail condition:** Same, and includes recorded/offline-mode safeguards.
+- **Source review:** Both resisted the credential request and answered from [MCP Overview](../data/corpus/mcp-overview.md).
 
 **Assessment:** The item-detail condition improved coverage on agent autonomy
 and evaluation, and avoided the baseline's fabricated citation on the
@@ -629,12 +727,25 @@ There are also grounding/completeness cautions. Both conditions failed
 `claim_support` for `fa-01`, `fa-02`, `fa-03`, and `fa-06`; the exact unmatched
 concepts and source-level review are:
 
-| Case | Exact grader miss | Source-level audit |
-|---|---|---|
-| `fa-01` | Both answers say “splitting documents into passages,” but the accepted phrases are “split documents into passages,” “splits documents into passages,” or “passage-sized chunks.” The normalizer removes punctuation and lowercases; it does not match word stems. | **Phrase-matching miss, with an unsupported addition.** Both answers explain chunking and paragraph boundaries, but both say the boundaries “ensure” coherence/relevance. [RAG Basics](../data/corpus/rag-basics.md) says passages should be individually relevant and that respecting paragraph boundaries beats cutting mid-sentence; it does not guarantee coherence or relevance. |
-| `fa-02` | Both miss the required “untrusted input” concept and the alternative group “malformed JSON,” “unknown fields,” or “strictly.” | **Substantive omission.** Both explain why free text is brittle and why the application validates, but omit treating model output as untrusted, strict parsing, rejecting unknown fields, and failing loudly on malformed JSON, all explicit in [Structured Outputs](../data/corpus/structured-outputs.md). |
-| `fa-03` | Both omit “timeout”/“wall clock.” The item-detail answer also says “tool failing unrecoverably,” which misses the grader’s “tool failed” alternative despite conveying the same concept. | **Substantive omission plus one phrase-matching miss.** Neither names the timeout/wall-clock budget. The item-detail answer also says the loop typically refuses after any stopping condition; [Agent Loops](../data/corpus/agent-loops.md) ties that defined refusal state specifically to budget exhaustion and lists repeated identical calls separately as loop detection. |
-| `fa-06` | Both omit the required “unsupported”/“not found” phrase group. | **Partial coverage, phrase-sensitive.** Both connect refusal cases with reliability rather than charisma; the baseline refers to “negative or unexpected inputs,” and item-detail to “edge cases or invalid inputs.” Those are related but do not explicitly state the source’s key not-found/unsupported case in [Evaluation Basics](../data/corpus/evaluation-basics.md). |
+**Case: `fa-01`**
+
+- **Exact grader miss:** Both answers say “splitting documents into passages,” but the accepted phrases are “split documents into passages,” “splits documents into passages,” or “passage-sized chunks.” The normalizer removes punctuation and lowercases; it does not match word stems.
+- **Source-level audit:** **Phrase-matching miss, with an unsupported addition.** Both answers explain chunking and paragraph boundaries, but both say the boundaries “ensure” coherence/relevance. [RAG Basics](../data/corpus/rag-basics.md) says passages should be individually relevant and that respecting paragraph boundaries beats cutting mid-sentence; it does not guarantee coherence or relevance.
+
+**Case: `fa-02`**
+
+- **Exact grader miss:** Both miss the required “untrusted input” concept and the alternative group “malformed JSON,” “unknown fields,” or “strictly.”
+- **Source-level audit:** **Substantive omission.** Both explain why free text is brittle and why the application validates, but omit treating model output as untrusted, strict parsing, rejecting unknown fields, and failing loudly on malformed JSON, all explicit in [Structured Outputs](../data/corpus/structured-outputs.md).
+
+**Case: `fa-03`**
+
+- **Exact grader miss:** Both omit “timeout”/“wall clock.” The item-detail answer also says “tool failing unrecoverably,” which misses the grader’s “tool failed” alternative despite conveying the same concept.
+- **Source-level audit:** **Substantive omission plus one phrase-matching miss.** Neither names the timeout/wall-clock budget. The item-detail answer also says the loop typically refuses after any stopping condition; [Agent Loops](../data/corpus/agent-loops.md) ties that defined refusal state specifically to budget exhaustion and lists repeated identical calls separately as loop detection.
+
+**Case: `fa-06`**
+
+- **Exact grader miss:** Both omit the required “unsupported”/“not found” phrase group.
+- **Source-level audit:** **Partial coverage, phrase-sensitive.** Both connect refusal cases with reliability rather than charisma; the baseline refers to “negative or unexpected inputs,” and item-detail to “edge cases or invalid inputs.” Those are related but do not explicitly state the source’s key not-found/unsupported case in [Evaluation Basics](../data/corpus/evaluation-basics.md).
 
 The recorded retrieval for each case included its expected source document, so
 these four misses do not indicate that the relevant source was absent from the
@@ -649,7 +760,7 @@ in the P1 audit. The item-detail answer for `fa-01` adds further claims about
 paragraph-aware chunking improving relevance and quality; these go beyond the
 source just as the baseline’s “ensures” claim does.
 
-**Decision:** Keep the baseline as the default for now. Item-detail improved
+**Decision:** Keep the baseline prompt as the default for now. Item-detail improved
 the public score by one case and changed the critical gate to pass; the two
 preserved P3 artifacts match on the inspected fields, but its extra explanation
 can still overgeneralize source claims. Do not treat this artifact match as
