@@ -14,7 +14,7 @@
 - No B5/B6 production correction is included.
 
 **Execution boundary**
-- **Execution boundary:** execution remains blocked and unauthorized.
+- Execution remains blocked and unauthorized.
 
 Status reconciled: 2026-11-02
 Reviewed: 2026-10-22
