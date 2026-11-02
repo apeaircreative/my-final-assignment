@@ -1,14 +1,6 @@
 # Current state of the project
 ---
 
-**Find a section**
-- [Current status and dated reconciliations](#status-reconciliation--2026-11-02)
-- [What the system is](#what-the-system-is)
-- [Reported verification and experimental evidence](#reported-verification-and-experimental-evidence)
-- [Accepted application decisions](#accepted-application-decisions)
-- [Remaining work](#remaining-work)
-- [Tracked limitations](#tracked-limitations)
-
 **Current status**
 - Phase A is complete.
 - B1–B4 offline checks are documented as passed.
@@ -39,6 +31,14 @@ verification at the revisions identified in each section. The original
 reviewed baseline above is distinct from the selected pre-change evaluation
 baseline below. It does not establish that every requirement is implemented
 or verified.
+
+**Find a section**
+- [Current status and dated reconciliations](#status-reconciliation--2026-11-02)
+- [What the system is](#what-the-system-is)
+- [Reported verification and experimental evidence](#reported-verification-and-experimental-evidence)
+- [Accepted application decisions](#accepted-application-decisions)
+- [Remaining work](#remaining-work)
+- [Tracked limitations](#tracked-limitations)
 
 ## Status reconciliation — 2026-11-02
 
