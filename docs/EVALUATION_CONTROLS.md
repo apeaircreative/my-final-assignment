@@ -1,5 +1,19 @@
 # Offline evaluation controls — scope and limitations
 
+This document records the accepted partial offline controls checkpoint
+and its evidence boundaries.
+
+- **Scope:** Partial offline controls and evidence—not a complete
+  two-revision runner.
+- **Execution boundary:** Live evaluation remains unauthorized.
+- **Current status and authorization:** See
+  [CURRENT_STATE.md](CURRENT_STATE.md#status-reconciliation--2026-11-02).
+- **Remaining readiness gates:** See
+  [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md#integration-and-readiness-reconciliation--2026-11-01).
+- **Historical evidence:** Commands and results below record earlier
+  offline verification. They do not grant permission to execute an evaluation.
+
+
 ## Status
 
 Accepted partial tooling checkpoint for issue #12, merged through PR #18.
