@@ -3,9 +3,15 @@
 This record states the project's retention decisions and distinguishes them
 from the current implementation.
 
-STORED: The six versioned corpus documents are the agent's persistent research
-knowledge. During a process, session state holds an answer-style preference and
-up to five question summaries; MemoryStore holds explicitly keyed values.
+STORED: The six versioned corpus documents are the agent's persistent
+research knowledge. Separately, `answer_with_state()` accepts a
+`SessionState` instance that holds an answer-style preference and question
+summaries. In the inspected code, `YourAgent.run()` calls
+`answer_question()` directly and does not call `answer_with_state()`.
+`MemoryStore` holds explicitly keyed in-memory values as a separate
+Session 11 exercise and is not wired into the inspected agent run.
+
+Implementation: [agent.py — state and memory implementation](https://github.com/apeaircreative/my-final-assignment/blob/e2b8e89a835a93d0cdfd1ac35822ff29fe2decf2/agent.py#L39-L92); [agent.py — YourAgent.run() execution path](https://github.com/apeaircreative/my-final-assignment/blob/e2b8e89a835a93d0cdfd1ac35822ff29fe2decf2/agent.py#L219-L299).
 
 WHY: Corpus documents ground research answers. The preference shapes the
 response prompt. Episode summaries retain bounded interaction history;
@@ -17,9 +23,11 @@ CORRECTED BY: SessionState.reset() clears that instance's preferences and
 episodes. Setting a preference or remembering an existing MemoryStore key
 replaces its value; MemoryStore has no clear method.
 
-EXPIRES: SessionState retains at most 5 episode records, each based on the first
-60 question characters. In-memory state ends with the process; no time-based
-expiration is implemented.
+EXPIRES: When `answer_with_state()` records an episode, it stores `Q: `
+plus the first 60 question characters and retains the latest five episode
+records. `SessionState` and `MemoryStore` use in-memory data structures;
+no time-based expiration is implemented. The six tests listed below do
+not exercise process restart.
 
 WE REFUSE TO REMEMBER: We do not make personal memory a product retention
 feature without a demonstrated need. MemoryStore remains a Session 11 exercise;
@@ -51,7 +59,7 @@ above is not enforced by a sensitive-data classifier or refusal mechanism.
 
 ## Implementation evidence
 
-The tests in `tests/test_contract.py` establish:
+The tests in [tests/test_contract.py at e2b8e89](https://github.com/apeaircreative/my-final-assignment/blob/e2b8e89a835a93d0cdfd1ac35822ff29fe2decf2/tests/test_contract.py#L675-L768) establish:
 
 - `test_answer_with_state_applies_preference_and_caps_episodes`: the short
   preference reaches the model prompt and the latest five episodes remain.
