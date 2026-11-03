@@ -1,8 +1,22 @@
 # Current state of the project
 ---
 
-Status: Phase A complete; B1–B4 documented as passed; B5 characterization integrated; B6 local characterization passed, with local review complete; PR validation and integration pending. No B5/B6 production correction is included.
-Status reconciled: 2026-10-26
+**Current status**
+- Phase A is complete.
+- B1–B4 offline checks are documented as passed.
+- B5/B6 characterization is integrated; neither is a production correction.
+- Partial offline evaluation tooling is merged and accepted.
+- Issue #12's assessment is complete: the project is not evaluation-ready.
+
+**Unresolved limitations**
+- The B5 trace-fidelity gap and B6 provider-lifecycle limitations remain unresolved.
+- Live-model quality remains unverified.
+- No B5/B6 production correction is included.
+
+**Execution boundary**
+- Execution remains blocked and unauthorized.
+
+Status reconciled: 2026-11-02
 Reviewed: 2026-10-22
 Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-assignment/commit/7d6513a)
 Verification base checkout (historical; 2026-10-22, before the A2 documentation patch):
@@ -18,9 +32,64 @@ reviewed baseline above is distinct from the selected pre-change evaluation
 baseline below. It does not establish that every requirement is implemented
 or verified.
 
+**Find a section**
+- [Current status and dated reconciliations](#status-reconciliation--2026-11-02)
+- [What the system is](#what-the-system-is)
+- [Reported verification and experimental evidence](#reported-verification-and-experimental-evidence)
+- [Accepted application decisions](#accepted-application-decisions)
+- [Remaining work](#remaining-work)
+- [Tracked limitations](#tracked-limitations)
+
+## Status reconciliation — 2026-11-02
+
+This is a documentation-status update dated 2026-11-02, distinct from the
+2026-11-01 evidence checkpoint below. It does not claim that the underlying
+evidence was newly collected on this date.
+
+- B1–B4 offline checks are documented as passed.
+- B5 and B6 characterization are integrated through [PR #10](https://github.com/apeaircreative/my-final-assignment/pull/10)
+  and [PR #11](https://github.com/apeaircreative/my-final-assignment/pull/11);
+  these are characterization records, not production corrections.
+- The B5 trace-fidelity gap and B6 provider-lifecycle limitations remain
+  unresolved. The controlled observations do not establish production
+  corrections or stronger provider lifecycle guarantees.
+- Partial offline evaluation tooling is merged and accepted. Issue #12's
+  final assessment remains not evaluation-ready; execution remains blocked
+  and unauthorized.
+- Live-model quality remains unverified. No evaluation candidate is frozen,
+  and the readiness gates recorded below remain unresolved.
+- No new tests or graders were run for this documentation update.
+
+## Status reconciliation — 2026-11-01
+
+- B6 characterization was integrated through [PR #11](https://github.com/apeaircreative/my-final-assignment/pull/11)
+  on 2026-10-26 at `638f565693ce3740855878033d8fd6183d803760`.
+  Integration does not establish real-provider cancellation or a production
+  lifecycle correction.
+- Partial offline controls and compatibility tooling merged through
+  [PR #18](https://github.com/apeaircreative/my-final-assignment/pull/18) at
+  `fbbc5547fdc53e3853f54c4949952b67607c4b2c`.
+- [Review reconciliation](https://github.com/apeaircreative/my-final-assignment/pull/18#issuecomment-6559504240)
+  and [owner acceptance](https://github.com/apeaircreative/my-final-assignment/pull/18#issuecomment-6559576782)
+  are complete for the partial scope. The owner disclosed control of both
+  accounts; this is not independent second-person approval.
+- [Issue #12's final assessment](https://github.com/apeaircreative/my-final-assignment/issues/12#issuecomment-6559721999)
+  is complete and the issue is closed with a not-ready / execution-blocked
+  outcome, not verified end-to-end execution readiness.
+- Remaining readiness gates are preserved in
+  [#14](https://github.com/apeaircreative/my-final-assignment/issues/14#issuecomment-6559721538) and
+  [#15](https://github.com/apeaircreative/my-final-assignment/issues/15#issuecomment-6559721747).
+  [#13](https://github.com/apeaircreative/my-final-assignment/issues/13) remains the fresh-case prerequisite.
+- No evaluation candidate is frozen. Real-provider completion/stop, hard
+  aggregate enforcement, a complete approved execution path, and exact
+  future-candidate compatibility remain unresolved readiness requirements.
+- Recorded verification retains its original revision context. This status
+  update claims no new test or grader execution. Live evaluation remains
+  unauthorized.
+
 ## Status reconciliation — 2026-10-26
 
-Evidence observed at `2026-10-26T18:19:59Z`:
+**Historical checkpoint — evidence observed at `2026-10-26T18:19:59Z`:**
 
 - Selected pre-change evaluation baseline:
   `da5776412fe0c200201032726b7db4a2f0cce954`.
@@ -130,8 +199,10 @@ this execution path.
 
 ## Reported verification and experimental evidence
 
-These results belong to their recorded revisions and configurations.
-They are not automatically measurements of a later working tree.
+The verification results and experiment observations below are tied to their
+recorded revisions and configurations; they are not a combined current scorecard.
+The Prompt decision subsection records the current decision to keep the baseline
+prompt as default. It is a decision, not a historical experiment result.
 
 ### Offline tests
 
@@ -274,11 +345,12 @@ on the inspected per-case answers, retrieved content, and grader dimensions.
 Follow [GAP_CLOSING_PLAN.md](GAP_CLOSING_PLAN.md) sequentially.
 
 - Phase A: complete; milestone #1 is closed. See the dated evidence above.
-- Phase B: B1–B4 are documented as passed. B5 / issue #6 characterization
-  is integrated in merge `23023a6d4713b89d84d4bb93fdcb1e0194afa009`;
-  its trace-fidelity gap remains unresolved. B6 / issue #7 local timeout
-  characterization passed; final review and PR integration remain pending.
-  See the plan for revision-specific evidence and lifecycle limitations.
+- Phase B: B1–B4 offline checks are documented as passed. B5 / issue #6
+  characterization is integrated through [PR #10](https://github.com/apeaircreative/my-final-assignment/pull/10);
+  its trace-fidelity gap remains unresolved. B6 / issue #7 characterization
+  is integrated through [PR #11](https://github.com/apeaircreative/my-final-assignment/pull/11);
+  provider-lifecycle limitations remain unresolved. See the plan for
+  revision-specific evidence and limitations.
 - Phase C: fix demonstrated contract violations with the smallest appropriate
   changes.
 - Subsequent quality evaluation: use a freshly frozen protocol before

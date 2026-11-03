@@ -7,6 +7,11 @@ Every number below has the command that produced it, the commit it ran on, and
 the model. A number without its command is an impression, and this file holds
 none. CI has no keys, so any number CI printed is the offline fake model's.
 
+**Historical scope:** This is a comparison of the offline `FakeLLM`
+practice evaluator. The before/after checkpoints are identified by commit
+below, not by exact evaluator run timestamps. These results do not assess
+current project readiness or live-model answer quality.
+
 ## Evaluation lane
 
 The comparable before/after lane is the offline practice evaluator using the

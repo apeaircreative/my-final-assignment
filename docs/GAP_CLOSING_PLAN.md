@@ -7,6 +7,36 @@ Baseline reviewed: [`7d6513a`](https://github.com/aprewards35-coder/my-final-ass
 
 ---
 
+**Plan status snapshot — 2026-11-02 (documentation reconciliation; no new verification claimed)**
+
+- **Phase A — complete:** accepted decisions and evidence reconciliation are recorded.
+- **Phase B — outcomes recorded:** B1–B4 offline checks are documented as passed; B5/B6 controlled characterization is integrated through PR #10 and PR #11. The B5 trace-fidelity and B6 provider-lifecycle limitations remain unresolved.
+- **Phase C — approval-gated:** demonstrated violations may be considered for correction, but each production change requires separate approval.
+- **Subsequent answer-quality evaluation — blocked:** no candidate is frozen and live evaluation remains unauthorized.
+
+For the consolidated current project status, see [CURRENT_STATE.md](CURRENT_STATE.md).
+
+**Navigate by phase and task**
+
+- [Purpose](#purpose)
+- [Scope boundaries](#scope-boundaries)
+- [Workflow](#workflow)
+- [Phase A — Documentation and evidence reconciliation](#phase-a--documentation-and-evidence-reconciliation)
+  - [A1 — Record accepted decisions](#a1--record-accepted-decisions)
+  - [A2 — Reconcile reported results](#a2--reconcile-reported-results)
+- [Phase B — Offline verification](#phase-b--offline-verification)
+  - [B1 — Supported-interface delegation](#b1--supported-interface-delegation)
+  - [B2 — Missing-citation requirement](#b2--missing-citation-requirement)
+  - [B3 — Review-reason combinations](#b3--review-reason-combinations)
+  - [B4 — Detector boundaries and returned-answer override](#b4--detector-boundaries-and-returned-answer-override)
+  - [B5 — Failure during parse repair](#b5--failure-during-parse-repair)
+  - [B6 — Timeout boundaries](#b6--timeout-boundaries)
+- [Integration and readiness reconciliation — 2026-11-01](#integration-and-readiness-reconciliation--2026-11-01)
+- [Phase C — Demonstrated violations only](#phase-c--demonstrated-violations-only)
+- [Subsequent answer-quality evaluation](#subsequent-answer-quality-evaluation)
+- [Per-task outcome record](#per-task-outcome-record)
+- [Evidence retention](#evidence-retention)
+
 ## Purpose
 
 Turn the accepted application decisions into executable offline checks,
@@ -369,11 +399,14 @@ production behavior, or corpus changes occurred.
 
 Reviewed: 2026-10-21.
 
-Status update — 2026-10-26: The planned offline implementation/verification
-tasks for Q1–Q4 (B1–B4) and Phase A A2 are complete. Reliability tasks B5/B6
-remain pending as separately listed. Final review and CodeQL follow-up are
-owner-reported complete; the dated reconciliation in CURRENT_STATE.md
-records accessible evidence and its limits.
+**Historical status update — 2026-10-26
+(integration status superseded by the 2026-11-01 reconciliation below):**
+
+At that checkpoint, the planned offline implementation/verification tasks
+for Q1–Q4 (B1–B4) and Phase A A2 were complete. B5/B6 remained pending
+at that time. Final review and CodeQL follow-up were owner-reported complete;
+the dated reconciliation in CURRENT_STATE.md records accessible evidence
+and its limits.
 
 ### B5 — Failure during parse repair
 
@@ -467,8 +500,9 @@ Scope and remaining limitations:
 
 ### B6 — Timeout boundaries
 
-Status: controlled characterization passed; local test and documentation
-review completed. PR validation and integration remain pending.
+Historical local checkpoint: controlled characterization passed; local test and documentation
+review completed. PR validation and integration were pending at that checkpoint;
+see the 2026-11-01 integration reconciliation below.
 B5 / issue #6 completion and review satisfy the prerequisite; its merged
 characterization is present in base revision
 `23023a6d4713b89d84d4bb93fdcb1e0194afa009`.
@@ -488,8 +522,9 @@ remaining lifecycle risk.
 
 ### Outcome — B6 characterization, 2026-10-26
 
-Status: controlled characterization passed; local test and documentation
-review completed. PR validation and integration remain pending.
+Historical local checkpoint: controlled characterization passed; local test and documentation
+review completed. PR validation and integration were pending at that checkpoint;
+see the 2026-11-01 integration reconciliation below.
 
 Verification base:
 `23023a6d4713b89d84d4bb93fdcb1e0194afa009`, with the uncommitted B6
@@ -575,9 +610,54 @@ Evidence limits and remaining risks:
 
 Reviewed: 2026-10-26 — complete test diff and supporting documentation
 diffs reviewed in the conversation; no blocking issue found.
-PR validation and integration remain pending.
+At this historical review checkpoint, PR validation, integration, and
+commit recording were pending. See the integration reconciliation below.
 
-Commit: pending.
+### Integration and readiness reconciliation — 2026-11-01
+
+**B5/B6 characterization integration**
+
+B5 / issue #6 characterization and review were integrated through [PR #10](https://github.com/apeaircreative/my-final-assignment/pull/10)
+at `23023a6d4713b89d84d4bb93fdcb1e0194afa009`.
+B6 characterization was integrated through [PR #11](https://github.com/apeaircreative/my-final-assignment/pull/11) on
+2026-10-26 at `638f565693ce3740855878033d8fd6183d803760`.
+These integrations supersede the integration-pending status of the historical
+local checkpoints above. They do not claim new tests, real-provider
+cancellation, or production corrections for either characterization gap.
+
+**Partial offline evaluation tooling and assessment**
+
+Partial offline evaluation tooling merged through [PR #18](https://github.com/apeaircreative/my-final-assignment/pull/18)
+at `fbbc5547fdc53e3853f54c4949952b67607c4b2c`, with
+[review reconciliation](https://github.com/apeaircreative/my-final-assignment/pull/18#issuecomment-6559504240) and
+[owner acceptance](https://github.com/apeaircreative/my-final-assignment/pull/18#issuecomment-6559576782) recorded.
+The acceptance is not independent second-person approval.
+
+[Issue #12's assessment](https://github.com/apeaircreative/my-final-assignment/issues/12#issuecomment-6559721999)
+is complete with a not-ready / execution-blocked outcome. Closure does
+not establish verified execution readiness.
+
+**Remaining readiness gates**
+
+The remaining gates are retained under
+[#14](https://github.com/apeaircreative/my-final-assignment/issues/14#issuecomment-6559721538) and
+[#15](https://github.com/apeaircreative/my-final-assignment/issues/15#issuecomment-6559721747):
+verified real-provider completion/stop, hard aggregate enforcement, an
+approved complete execution path with truthful whole-run outcomes, and exact
+future-candidate compatibility. [#13](https://github.com/apeaircreative/my-final-assignment/issues/13)
+remains the fresh-case prerequisite. Issue #15's incomplete description
+also requires reconciliation before execution.
+
+**Production-correction boundary**
+
+Production B5 trace fidelity and explicit run-lifecycle implementation remain
+separate proposals requiring scope approval, not additional implementation
+requirements for the accepted partial checkpoint. B5 trace fidelity and B6
+provider-lifecycle limitations remain unresolved; neither characterization
+integration is a production correction.
+
+No candidate is frozen and live evaluation remains unauthorized.
+This documentation reconciliation claims no new verification execution.
 
 ## Phase C — Demonstrated violations only
 
