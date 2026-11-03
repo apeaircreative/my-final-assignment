@@ -1,8 +1,9 @@
 # Ranked issues
 
-**Ranking provenance:** The initial list was filled in session 9
-(`cap01-e5`) and kept current until session 14, which fixes rank 1
-and adds its regression test.
+**Ranking provenance:** The initial list was filled in session 9 (`cap01-e5`) and kept current
+through session 14, which corrected the initial-call failure path and
+added its regression test. B5 later demonstrated a separate repair-failure
+trace gap; see Rank 1 below.
 
 **Ranking rule:** Maintain at least three entries, use consecutive unique
 ranks beginning at 1, and order by impact. These are document priority ranks,

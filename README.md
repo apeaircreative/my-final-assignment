@@ -155,8 +155,8 @@ refusal and human-review policy, and separate retrieved-content safety checks.
 
 **In short:** app entry and safety checks → course provider utilities and answer pipeline → app final safety decision and trace.
 
-[Open overview full-size](docs/diagrams/answer-flow-overview.svg) ·
-[Open detailed flow](docs/diagrams/answer-flow-detail.svg)
+[Open overview full-size](docs/diagrams/answer-flow-overview.svg) · [Mermaid source](docs/diagrams/answer-flow-overview.mmd) ·
+[Open detailed flow](docs/diagrams/answer-flow-detail.svg) · [Mermaid source](docs/diagrams/answer-flow-detail.mmd)
 
 Retrieved passages are untrusted data. The course engine tells the model to
 
