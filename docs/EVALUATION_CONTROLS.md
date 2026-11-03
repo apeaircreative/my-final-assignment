@@ -13,7 +13,6 @@ and its evidence boundaries.
 - **Historical evidence:** Commands and results below record earlier
   offline verification. They do not grant permission to execute an evaluation.
 
-
 ## Status
 
 Accepted partial tooling checkpoint for issue #12, merged through PR #18.
